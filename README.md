@@ -31,7 +31,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 ## TODO
 
 - [ ] Add support for enhanced performance setting
-- [ ] Port to P2/SPIN2
+- [x] Port to P2/SPIN2
 - [x] Use the 20MHz SPI driver for the P1
 - [ ] Add some direct-draw methods to the driver for apps that don't need a full buffered display
 - [ ] Test external memory options with driver
