@@ -5,7 +5,7 @@
     Description: Low-level constants
     Copyright (c) 2020
     Started: Mar 11, 2020
-    Updated: Mar 11, 2020
+    Updated: Mar 12, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -17,41 +17,19 @@ CON
     SCK_MAX_FREQ                        = 30_000_000    ' Don't actually know...just put something for now
 
 ' Register map
-    SETCOLUMN                       = $15
+    SETCOLUMN                           = $15
 
-    DRAWLINE                        = $21
-    DRAWRECT                        = $22
-    COPY                            = $23
-    CLEAR                           = $25
+    WRITERAM                            = $5C
+    READRAM                             = $5D
+    SETROW                              = $75
+    MASTERCURRENT                       = $87
 
-    FILL                            = $26
-    FILL_MASK                       = $11
-        FLD_FILL                        = 0
-        FLD_REVCOPY                     = 4
-        MASK_FILL                       = FILL_MASK ^ (1 << FLD_FILL)
-        MASK_REVCOPY                    = FILL_MASK ^ (1 << FLD_REVCOPY)
+    HORIZ_SCROLL                        = $96       ' 6B CMD
+    STOP_SCROLL                         = $9E
+    START_SCROLL                        = $9F
 
-    SCROLLSETUP                     = $27
-    SCROLLSTOP                      = $2E
-    SCROLLSTART                     = $2F
-    WRITERAM                        = $5C
-    READRAM                         = $5D
-    SETROW                          = $75
-    CONTRASTA                       = $81
-    CONTRASTB                       = $82
-    CONTRASTC                       = $83
-    MASTERCURRENT                   = $87
-
-    PRECHARGEA                      = $8A
-    PRECHARGEB                      = $8B
-    PRECHARGEC                      = $8C
-
-    HORIZ_SCROLL                    = $96       ' 6B CMD
-    STOP_SCROLL                     = $9E
-    START_SCROLL                    = $9F
-
-    SETREMAP                        = $A0
-    SETREMAP_MASK                   = $F7
+    SETREMAP                            = $A0
+    SETREMAP_MASK                       = $F7
         FLD_ADDRINC                     = 0
         FLD_SEGREMAP                    = 1
         FLD_SUBPIX_ORDER                = 2
@@ -66,28 +44,23 @@ CON
         MASK_COMSPLIT                   = SETREMAP_MASK ^ (1 << FLD_COMSPLIT)
         MASK_COLORFORMAT                = SETREMAP_MASK ^ (BITS_COLORFORMAT << FLD_COLORFORMAT)
 
-    STARTLINE                       = $A1
-    DISPLAYOFFSET                   = $A2
+    STARTLINE                           = $A1
+    DISPLAYOFFSET                       = $A2
 
-    DISPLAYALLOFF                   = $A4
-    DISPLAYALLON                    = $A5
-    NORMALDISPLAY                   = $A6
-    INVERTDISPLAY                   = $A7
+    DISPLAYALLOFF                       = $A4
+    DISPLAYALLON                        = $A5
+    NORMALDISPLAY                       = $A6
+    INVERTDISPLAY                       = $A7
 
-'    SETMULTIPLEX                    = $A8
-    FUNCSEL                         = $AB
+    FUNCSEL                             = $AB
 
-    DISPLAYONDIM                    = $AC
+    DISPLAYOFF                          = $AE
+    DISPLAYON                           = $AF
 
-    NOOP                            = $AD
+    NOOP2                               = $B0
 
-    DISPLAYOFF                      = $AE
-    DISPLAYON                       = $AF
-
-    NOOP2                           = $B0
-
-    PRECHARGE                       = $B1
-    PRECHARGE_MASK                  = $FF
+    PRECHARGE                           = $B1
+    PRECHARGE_MASK                      = $FF
         FLD_PHASE1                      = 0
         FLD_PHASE2                      = 4
         BITS_PHASE1                     = %1111
@@ -95,10 +68,10 @@ CON
         MASK_PHASE1                     = PRECHARGE_MASK ^ (BITS_PHASE1)
         MASK_PHASE2                     = PRECHARGE_MASK ^ (BITS_PHASE2 << FLD_PHASE2)
 
-    DISPENH                         = $B2       ' 4B CMD. B2 00 00 00 = NORMAL, B2 A4 00 00 = ENH PERF
+    DISPENH                             = $B2       ' 4B CMD. B2 00 00 00 = NORMAL, B2 A4 00 00 = ENH PERF
 
-    CLOCKDIV                        = $B3       ' LOCKED BY $FD ON POR
-    CLOCKDIV_MASK                   = $FF
+    CLOCKDIV                            = $B3       ' LOCKED BY $FD ON POR
+    CLOCKDIV_MASK                       = $FF
         FLD_CLKDIV                      = 0
         FLD_FOSCFREQ                    = 4
         BITS_CLKDIV                     = %1111
@@ -106,9 +79,9 @@ CON
         MASK_CLKDIV                     = CLOCKDIV_MASK ^ (BITS_CLKDIV)
         MASK_FOSCFREQ                   = CLOCKDIV_MASK ^ (BITS_FOSCFREQ << FLD_FOSCFREQ)
 
-    SETSEGLOWVOLTAGE                = $B4       ' 4B CMD. B4 A0 B5 55 = EXTERNAL VSL (POR)
-    SETGPIO                         = $B5
-    SETGPIO_MASK                    = $0F
+    SETSEGLOWVOLTAGE                    = $B4       ' 4B CMD. B4 A0 B5 55 = EXTERNAL VSL (POR)
+    SETGPIO                             = $B5
+    SETGPIO_MASK                        = $0F
         FLD_GPIO0                       = 0
         FLD_GPIO1                       = 2
         BITS_GPIO0                      = %11
@@ -116,26 +89,24 @@ CON
         MASK_GPIO0                      = BITS_GPIO0 ^ (BITS_GPIO0 << FLD_GPIO0)
         MASK_GPIO1                      = BITS_GPIO1 ^ (BITS_GPIO1 << FLD_GPIO1)
 
-    SETSECPRECHG                    = $B6
-    SETSECPRECHG_MASK               = $0F
+    SETSECPRECHG                        = $B6
+    SETSECPRECHG_MASK                   = $0F
 
-    GRAYSCALE_LUT                   = $B8       ' 64B CMD. B8 [A1..A63 = 00..B4]
-    GRAYSCALE_RESET                 = $B9       ' DEFAULT LINEAR LUT (0, 2, 4, 6 .. 122, 124)
+    GRAYSCALE_LUT                       = $B8       ' 64B CMD. B8 [A1..A63 = 00..B4]
+    GRAYSCALE_RESET                     = $B9       ' DEFAULT LINEAR LUT (0, 2, 4, 6 .. 122, 124)
 
-    PRECHARGELEVEL                  = $BB
-'    NOP1                            = $BC
-'    NOP2                            = $BD
-    VCOMH                           = $BE
+    PRECHARGELEVEL                      = $BB
+    VCOMH                               = $BE
 
-    SETCONTRASTABC                  = $C1       ' 4B CMD
-    MASTERCONTRAST_CURR_CTRL        = $C7
+    SETCONTRASTABC                      = $C1       ' 4B CMD
+    MASTERCONTRAST_CURR_CTRL            = $C7
 
-    SETMUXRATIO                     = $CA
+    SETMUXRATIO                         = $CA
 
-    NOOP3                           = $D1
-    NOOP4                           = $E3
+    NOOP3                               = $D1
+    NOOP4                               = $E3
 
-    SETLOCK                     = $FD
+    SETLOCK                             = $FD
 ' Other constants
     SEL_EXTERNAL_VCC                    = $8E
 
