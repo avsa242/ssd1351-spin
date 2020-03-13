@@ -11,6 +11,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 * Control display visibility (independent of display RAM contents)
 * Set subpixel order
 * Set color depth (16, 18-bit can be set; currently only 16-bit supported by driver)
+* Set contrast/brightness
+* Low-level display configuration settings: Precharge periods and levels, Oscillator freq and divider, logic levels
 
 ## Requirements
 
