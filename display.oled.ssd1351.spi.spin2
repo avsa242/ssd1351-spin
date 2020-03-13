@@ -39,8 +39,10 @@ CON
     SUBPIX_BGR      = 1
 
 ' OLED command lock
-    UNLOCK          = $12
-    LOCK            = $16
+    ALL_UNLOCK      = $12
+    ALL_LOCK        = $16
+    CFG_LOCK        = $B0
+    CFG_UNLOCK      = $B1
 
 OBJ
 
@@ -85,7 +87,8 @@ PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, CLK_HZ, RES_PIN, WIDTH, HEIGHT, dra
             Reset
             Powered(TRUE)
             time.MSleep(300)
-            LockOLED(UNLOCK)
+            LockOLED(ALL_UNLOCK)
+            LockOLED(CFG_UNLOCK)
             return okay
     return FALSE
 
@@ -107,7 +110,7 @@ PUB Defaults
     StartLine (0)
     VertOffset (0)
     DisplayInverted (FALSE)
-    DisplayLines (128)
+    DisplayLines (_disp_height)
     Phase1Period (5)
     Phase2Period (8)
     ClockFreq (3020)
@@ -296,10 +299,10 @@ PUB Interlaced(enabled) | tmp
 PUB LockOLED(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
-'       UNLOCK (0): Normal operation - OLED display accepts commands
+'       ALL_UNLOCK (0): Normal operation - OLED display accepts commands
 '       LOCK (1):   Locked - OLED will not process any commands, except LockOLED(UNLOCK)
     case mode
-        UNLOCK, LOCK:
+        ALL_UNLOCK, ALL_LOCK, CFG_LOCK, CFG_UNLOCK:
         OTHER:
             return FALSE
 

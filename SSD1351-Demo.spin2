@@ -28,7 +28,7 @@ CON
     RST         = 29
     DIN         = 25
     CLK         = 24
-    CLK_HZ      = 20_000_000
+    CLK_HZ      = 6_500_000
 
     LED         = cfg#LED1
     SER_RX      = cfg#SER_RX
@@ -70,7 +70,7 @@ PUB Main
     _ser_row := 3
     Setup
 
-    Demo_Text(320)
+    Demo_Text(336)
     time.Sleep(2)
 
     Demo_MEMScroller ($0000, $0FFF)
