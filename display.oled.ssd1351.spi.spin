@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2020
     Started: Mar 11, 2020
-    Updated: Mar 12, 2020
+    Updated: Mar 13, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -39,8 +39,10 @@ CON
     SUBPIX_BGR      = 1
 
 ' OLED command lock
-    UNLOCK          = $12
-    LOCK            = $16
+    ALL_UNLOCK      = $12
+    ALL_LOCK        = $16
+    CFG_LOCK        = $B0
+    CFG_UNLOCK      = $B1
 
 OBJ
 
@@ -54,11 +56,7 @@ VAR
     long _DC, _RES, _MOSI, _SCK, _CS
     long _draw_buffer
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
-    byte _sh_SETCOLUMN, _sh_SETROW, _sh_SETCONTRAST_A, _sh_SETCONTRAST_B, _sh_SETCONTRAST_C
-    byte _sh_MASTERCCTRL, _sh_SECPRECHG[3], _sh_REMAPCOLOR, _sh_DISPSTARTLINE, _sh_DISPOFFSET
-    byte _sh_DISPMODE, _sh_MULTIPLEX, _sh_DIM, _sh_MASTERCFG, _sh_DISPONOFF, _sh_POWERSAVE
-    byte _sh_PHASE12PER, _sh_CLK, _sh_GRAYTABLE, _sh_PRECHGLEV, _sh_VCOMH, _sh_CMDLOCK
-    byte _sh_HVSCROLL, _sh_FILL
+    byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER
 
 PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, drawbuffer_address): okay
 
@@ -83,7 +81,8 @@ PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, drawbuffer_
             Reset
             Powered(TRUE)
             time.MSleep(300)
-            LockOLED(UNLOCK)
+            LockOLED(ALL_UNLOCK)
+            LockOLED(CFG_UNLOCK)
             return okay
     return FALSE
 
@@ -105,7 +104,7 @@ PUB Defaults
     StartLine (0)
     VertOffset (0)
     DisplayInverted (FALSE)
-    DisplayLines (128)
+    DisplayLines (_disp_height)
     Phase1Period (5)
     Phase2Period (8)
     ClockFreq (3020)
@@ -294,10 +293,12 @@ PUB Interlaced(enabled) | tmp
 PUB LockOLED(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
-'       UNLOCK (0): Normal operation - OLED display accepts commands
-'       LOCK (1):   Locked - OLED will not process any commands, except LockOLED(UNLOCK)
+'       ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
+'       LOCK ($16):   Locked - OLED will not process any commands, except LockOLED(UNLOCK)
+'       CFG_LOCK ($B0): Configuration registers locked
+'       CFG_UNLOCK ($B1): Configuration registers unlocked
     case mode
-        UNLOCK, LOCK:
+        ALL_UNLOCK, ALL_LOCK, CFG_LOCK, CFG_UNLOCK:
         OTHER:
             return FALSE
 

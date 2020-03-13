@@ -61,7 +61,7 @@ PUB Main
     _ser_row := 3
     Setup
 
-    Demo_Text(1024)
+    Demo_Text(336)
     time.Sleep(2)
 
     Demo_MEMScroller ($0000, $FFFF)
