@@ -104,7 +104,7 @@ PUB Main
 PUB Demo_Text(reps) | r, fg, bg, ch, col, row, maxcol, maxrow
 ' Draw text with random foreground and background colors
     ser.position(0, _ser_row)
-    ser.Str(string("Demo_Text"))
+    ser.str(string("Demo_Text"))
     ch := col := row := 0
     maxcol := display.TextCols-1
     maxrow := display.TextRows-1
@@ -132,7 +132,7 @@ PUB Demo_Sine(reps) | r, x, y, modifier, offset, div
 ' Draw a sine wave the length of the screen, influenced by
 '  the system counter
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_Sine"))
+    ser.str(string("Demo_Sine"))
     div := 2048
     offset := YMAX/2                                        ' Offset for Y axis
     _bench_type := BT_FRAME
@@ -149,7 +149,7 @@ PUB Demo_Sine(reps) | r, x, y, modifier, offset, div
 PUB Demo_Bitmap(reps)
 ' Draw bitmap
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_Bitmap"))
+    ser.str(string("Demo_Bitmap"))
     _bench_type := BT_FRAME
     repeat reps
         display.Bitmap (0, BUFFSZ, 0)
@@ -159,7 +159,7 @@ PUB Demo_Bitmap(reps)
 PUB Demo_BoxBitmap(reps) | sx, sy, ex, ey, c
 ' Draw random filled boxes using the bitmap library's method
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_BoxBitmap"))
+    ser.str(string("Demo_BoxBitmap"))
     _bench_type := BT_UNIT
     repeat reps
         sx := RND (XMAX)
@@ -174,7 +174,7 @@ PUB Demo_BoxBitmap(reps) | sx, sy, ex, ey, c
 PUB Demo_Circle(reps) | r, x, y, c
 ' Draws random circles
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_Circle"))
+    ser.str(string("Demo_Circle"))
     _rndseed := cnt
     _bench_type := BT_FRAME
     repeat reps
@@ -188,14 +188,16 @@ PUB Demo_Circle(reps) | r, x, y, c
 
 PUB Demo_FadeIn(reps, delay) | c
 ' Fade out display
-    ser.Str(string("Demo_FadeIn"))
+    ser.position(0, _ser_row++)
+    ser.str(string("Demo_FadeIn"))
     repeat c from 0 to 255
         display.Contrast (c)
         time.MSleep (delay)
 
 PUB Demo_FadeOut(reps, delay) | c
 ' Fade out display
-    ser.Str(string("Demo_FadeOut"))
+    ser.position(0, _ser_row++)
+    ser.str(string("Demo_FadeOut"))
     repeat c from 255 to 0
         display.Contrast (c)
         time.MSleep (delay)
@@ -203,7 +205,7 @@ PUB Demo_FadeOut(reps, delay) | c
 PUB Demo_LineBitmap(reps) | sx, sy, ex, ey, c
 ' Draw random lines, using the bitmap library's method
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_LineBitmap"))
+    ser.str(string("Demo_LineBitmap"))
     _bench_type := BT_UNIT
     repeat reps
         sx := RND (XMAX)
@@ -218,7 +220,7 @@ PUB Demo_LineBitmap(reps) | sx, sy, ex, ey, c
 PUB Demo_MEMScroller(start_addr, end_addr) | pos, st, en
 ' Dump Propeller Hub RAM (or ROM) to the framebuffer
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_MEMScroller"))
+    ser.str(string("Demo_MEMScroller"))
     _bench_type := BT_FRAME
     repeat pos from start_addr to end_addr-BUFFSZ step BPL
         wordmove(@_framebuff, pos, BUFFSZ/2)
@@ -228,7 +230,7 @@ PUB Demo_MEMScroller(start_addr, end_addr) | pos, st, en
 PUB Demo_PlotBitmap(reps) | x, y, c
 ' Draw random pixels, using the bitmap library's method
     ser.position(0, _ser_row++)
-    ser.Str(string("Demo_PlotBitmap"))
+    ser.str(string("Demo_PlotBitmap"))
     _bench_type := BT_UNIT
     repeat reps
         x := RND (XMAX)
@@ -242,9 +244,9 @@ PUB FPS_mon
 ' Display to the serial terminal approximate render speed, in frames per second
     repeat
         time.MSleep (1000)
-        ser.Position (20, _ser_row)
-        ser.Str (string("FPS: "))
-        ser.Str (int.DecZeroed (_bench_iter, 3))
+        ser.Position (20, _ser_row-1)
+        ser.str (string("FPS: "))
+        ser.str (int.DecZeroed (_bench_iter, 3))
         _bench_iter := 0
 
 PUB RND(maxval) | i
@@ -272,14 +274,14 @@ PUB Setup
     clkset(ENAFREQ, CLOCKFREQ, XSEL)
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, 0, SER_BAUD)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#CR, ser#LF))
+    ser.str(string("Serial terminal started", ser#CR, ser#LF))
     if _display_cog := display.Start (CS, DC, DIN, CLK, CLK_HZ, RST, WIDTH, HEIGHT, @_framebuff)
-        ser.Str(string("SSD1351 driver started", ser#CR, ser#LF))
+        ser.str(string("SSD1351 driver started", ser#CR, ser#LF))
         display.FontAddress(fnt.BaseAddr)
         display.FontSize(6, 8)
-        display.Defaults
+        display.DefaultsCommon
     else
-        ser.Str(string("SSD1351 driver failed to start - halting"))
+        ser.str(string("SSD1351 driver failed to start - halting"))
         Stop
     _bench_cog := cognew(FPS_mon, @_bench_iter_stack)
 

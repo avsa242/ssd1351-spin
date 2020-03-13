@@ -35,8 +35,8 @@ CON
     ADDR_VERT       = 1
 
 ' Subpixel order
-    SUBPIX_RGB      = 0
-    SUBPIX_BGR      = 1
+    RGB             = 0
+    BGR             = 1
 
 ' OLED command lock
     ALL_UNLOCK      = $12
@@ -96,31 +96,57 @@ PUB Address(addr)
     _draw_buffer := addr
 
 PUB Defaults
-
+' Factory defaults
+    DisplayBounds(0, 0, 127, 127)
+    AddrIncMode(ADDR_HORIZ)
+    MirrorH(FALSE)
+    SubpixelOrder(RGB)
+    MirrorV(FALSE)
+    Interlaced(FALSE)
     ColorDepth (COLOR_65K)
-    MirrorH (TRUE)
-    Powered (FALSE)
-    DisplayVisibility(ALL_OFF)
-    StartLine (0)
-    VertOffset (0)
-    DisplayInverted (FALSE)
-    DisplayLines (_disp_height)
+    StartLine(0)
+    VertOffset(96)
     Phase1Period (5)
     Phase2Period (8)
     ClockFreq (3020)
     ClockDiv (2)
-    PrechargeLevel (419)
-    COMHVoltage (820)
-    Contrast (127)
+    Phase3Period (8)
+    PrechargeLevel (497)
+    COMHVoltage (813)
+    ContrastABC (138, 81, 138)
+    DisplayLines(128)
+
     Powered(TRUE)
-    DisplayBounds (0, 0, _disp_xmax, _disp_ymax)
+    DisplayVisibility(NORMAL)
+
+PUB DefaultsCommon
+' Defaults that are probably more commonly used
+    DisplayBounds(0, 0, _disp_xmax, _disp_ymax)
+    AddrIncMode(ADDR_HORIZ)
+    MirrorH(TRUE)
+    SubpixelOrder(RGB)
+    MirrorV(FALSE)
     Interlaced(FALSE)
+    ColorDepth (COLOR_65K)
+    StartLine(0)
+    VertOffset(0)
+    Phase1Period (5)
+    Phase2Period (8)
+    ClockFreq (3020)
+    ClockDiv (2)
+    Phase3Period (8)
+    PrechargeLevel (497)
+    COMHVoltage (813)
+    ContrastABC (138, 81, 138)
+    DisplayLines(128)
+
+    Powered(TRUE)
     DisplayVisibility(NORMAL)
 
 PUB AddrIncMode(mode) | tmp
 ' Set display addressing mode
 '   Valid values:
-'   ADDR_HORZ (0): Horizontal addressing mode
+'   ADDR_HORIZ (0): Horizontal addressing mode
 '   ADDR_VERT (1): Vertical addressing mode
     tmp := _sh_REMAPCOLOR
     case mode
@@ -382,14 +408,14 @@ PUB Phase3Period(clks) | tmp[2]
 
     writeReg (core#SETSECPRECHG, 1, @clks)
 
-PUB PlotAccel(x, y, rgb) | tmp[2]
-' Plot a pixel at x, y in color rgb, using the display's native/accelerated method
+PUB PlotAccel(x, y, c) | tmp[2]
+' Plot a pixel at x, y in color c, using the display's native/accelerated method
     x := 0 #> x <# _disp_width-1
     y := 0 #> y <# _disp_height-1
 
     DisplayBounds(x, x, y, y)
     time.USleep (5)
-    writeReg (core#WRITERAM, 2, @rgb)
+    writeReg (core#WRITERAM, 2, @c)
 
 PUB Powered(enabled) | tmp
 ' Enable display power
@@ -435,7 +461,7 @@ PUB SubpixelOrder(order)
 '       BGR (1): Blue-Green-Red order
 '   Any other value returns the current setting
     case order
-        SUBPIX_RGB, SUBPIX_BGR:
+        RGB, BGR:
             order <<= core#FLD_SUBPIX_ORDER
         OTHER:
             return (_sh_REMAPCOLOR >> core#FLD_SUBPIX_ORDER) & %1

@@ -5,7 +5,7 @@
     Description: Simple demo of the SSD1351 driver
     Copyright (c) 2020
     Started Mar 11, 2020
-    Updated Mar 11, 2020
+    Updated Mar 13, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -94,6 +94,7 @@ PUB Main
 
 PUB Demo_Text(reps) | r, fg, bg, ch, col, row, maxcol, maxrow
 ' Draw text with random foreground and background colors
+    ser.position(0, _ser_row)
     ser.str(string("Demo_Text"))
     ch := col := row := 0
     maxcol := display.TextCols-1
@@ -178,14 +179,16 @@ PUB Demo_Circle(reps) | r, x, y, c
 
 PUB Demo_FadeIn(reps, delay) | c
 ' Fade out display
-    ser.Str(string("Demo_FadeIn"))
+    ser.position(0, _ser_row++)
+    ser.str(string("Demo_FadeIn"))
     repeat c from 0 to 255
         display.Contrast (c)
         time.MSleep (delay)
 
 PUB Demo_FadeOut(reps, delay) | c
 ' Fade out display
-    ser.Str(string("Demo_FadeOut"))
+    ser.position(0, _ser_row++)
+    ser.str(string("Demo_FadeOut"))
     repeat c from 255 to 0
         display.Contrast (c)
         time.MSleep (delay)
@@ -233,8 +236,8 @@ PUB FPS_mon
     repeat
         time.MSleep (1000)
         ser.Position (20, _ser_row-1)
-        ser.Str (string("FPS: "))
-        ser.Str (int.DecZeroed (_bench_iter, 3))
+        ser.str (string("FPS: "))
+        ser.str (int.DecZeroed (_bench_iter, 3))
         _bench_iter := 0
 
 PUB RND(max_val) | i
@@ -261,14 +264,14 @@ PUB Setup
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, 0, SER_BAUD)
     time.MSleep(100)
     ser.Clear
-    ser.Str(string("Serial terminal started", ser#CR, ser#LF))
+    ser.str(string("Serial terminal started", ser#CR, ser#LF))
     if _display_cog := display.Start (CS, DC, DIN, CLK, RESET, WIDTH, HEIGHT, @_framebuff)
-        ser.Str(string("SSD1351 driver started", ser#CR, ser#LF))
+        ser.str(string("SSD1351 driver started", ser#CR, ser#LF))
         display.FontAddress(fnt.BaseAddr)
         display.FontSize(6, 8)
-        display.Defaults
+        display.DefaultsCommon
     else
-        ser.Str(string("SSD1351 driver failed to start - halting"))
+        ser.str(string("SSD1351 driver failed to start - halting"))
         Stop
     _bench_cog := cognew(FPS_mon, @_bench_iter_stack)
 
