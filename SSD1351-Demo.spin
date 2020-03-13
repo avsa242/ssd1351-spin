@@ -86,7 +86,8 @@ PUB Main
 
     Demo_BoxBitmap(250)
     time.Sleep (2)
-    display.ClearAll
+
+    Demo_Fadeout(1, 30)
 
     Stop
     FlashLED (LED, 100)
@@ -174,6 +175,20 @@ PUB Demo_Circle(reps) | r, x, y, c
         display.Circle (x, y, r, c)
         display.Update
         _bench_iter++
+
+PUB Demo_FadeIn(reps, delay) | c
+' Fade out display
+    ser.Str(string("Demo_FadeIn"))
+    repeat c from 0 to 255
+        display.Contrast (c)
+        time.MSleep (delay)
+
+PUB Demo_FadeOut(reps, delay) | c
+' Fade out display
+    ser.Str(string("Demo_FadeOut"))
+    repeat c from 255 to 0
+        display.Contrast (c)
+        time.MSleep (delay)
 
 PUB Demo_LineBitmap(reps) | sx, sy, ex, ey, c
 ' Draw random lines, using the bitmap library's method

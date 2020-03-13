@@ -111,7 +111,7 @@ PUB Defaults
     ClockDiv (2)
     PrechargeLevel (419)
     COMHVoltage (820)
-    Contrast (127, 127, 127)
+    Contrast (127)
     Powered(TRUE)
     DisplayBounds (0, 0, _disp_xmax, _disp_ymax)
     Interlaced(FALSE)
@@ -197,7 +197,13 @@ PUB COMHVoltage(mV) | tmp
 
     writeReg (core#VCOMH, 1, @mv)
 
-PUB Contrast(a, b, c)
+PUB Contrast(level)
+' Set contrast/brightness level of all subpixels to the same value
+'   Valid values: 0..255
+'   Any other value is ignored
+    ContrastABC(level, level, level)
+
+PUB ContrastABC(a, b, c)
 ' Set contrast/brightness level of subpixels a, b, c
 '   Valid values: 0..255
 '   Any other value is ignored
