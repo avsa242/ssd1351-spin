@@ -56,7 +56,8 @@ VAR
     long _DC, _RES, _MOSI, _SCK, _CS
     long _draw_buffer
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
-    byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER
+
+    byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER                            ' Shadow registers
 
 PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, drawbuffer_address): okay
 
@@ -92,7 +93,9 @@ PUB Stop
     Powered (FALSE)
 
 PUB Address(addr)
-
+' Set address of display buffer
+'   Example:
+'       display.Address(@_framebuffer)
     _draw_buffer := addr
 
 PUB Defaults
@@ -112,7 +115,7 @@ PUB Defaults
     ClockDiv (2)
     Phase3Period (8)
     PrechargeLevel (497)
-    COMHVoltage (813)
+    COMHVoltage (820)
     ContrastABC (138, 81, 138)
     DisplayLines(128)
 
@@ -136,7 +139,7 @@ PUB DefaultsCommon
     ClockDiv (2)
     Phase3Period (8)
     PrechargeLevel (497)
-    COMHVoltage (813)
+    COMHVoltage (820)
     ContrastABC (138, 81, 138)
     DisplayLines(128)
 
@@ -146,7 +149,7 @@ PUB DefaultsCommon
 PUB AddrIncMode(mode) | tmp
 ' Set display addressing mode
 '   Valid values:
-'   ADDR_HORIZ (0): Horizontal addressing mode
+'  *ADDR_HORIZ (0): Horizontal addressing mode
 '   ADDR_VERT (1): Vertical addressing mode
     tmp := _sh_REMAPCOLOR
     case mode
@@ -158,12 +161,15 @@ PUB AddrIncMode(mode) | tmp
     _sh_REMAPCOLOR := (_sh_REMAPCOLOR | mode) & core#SETREMAP_MASK
     writeReg (core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB ClearAccel
-'
+PUB ClearAccel | tmp
+' Clear the display directly, bypassing the display buffer
+    tmp := $00_00_00_00
+    repeat _buff_sz/4
+        writeReg(core#WRITERAM, 4, @tmp)
 
 PUB ClockDiv(divider) | tmp
 ' Set display clock divider
-'   Valid values: 1..1024:
+'   Valid values: 1..1024 (default: 2)
 '   Any other value returns the current setting
     tmp := _sh_CLK
     case divider
@@ -178,8 +184,10 @@ PUB ClockDiv(divider) | tmp
 
 PUB ClockFreq(freq) | tmp
 ' Set display clock frequency, in kHz
-'   Valid values: 2500..3100, in steps of 40
+'   Valid values: 2500..3100 (default: 3020)
 '   Any other value returns the current setting
+'   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
+'       so actual clock frequency may not be accurate. Value set will be rounded to the nearest 40kHz
     tmp := _sh_CLK
     case freq
         2500..3100:
@@ -195,7 +203,7 @@ PUB ClockFreq(freq) | tmp
 PUB ColorDepth(format) | tmp
 ' Set expected color format of pixel data
 '   Valid values:
-'       COLOR_65K (0): 16-bit/65536 color format 1
+'      *COLOR_65K (0): 16-bit/65536 color format 1
 '       COLOR_262K (1): 18-bits/262144 color format
 '       COLOR_262K65K2 (2): 18-bit/262144 color format, 16-bit/65536 color format 2
 '   Any other value returns the current setting
@@ -213,15 +221,17 @@ PUB ColorDepth(format) | tmp
 
 PUB COMHVoltage(mV) | tmp
 ' Set logic high level for COMmon pins, in millivolts
-'   Valid values: 440, 520, 610, 710, 830
+'   Valid values: 720..860 (default: 820)
 '   Any other value returns the current setting
+'   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
+'       so actual voltage may not be accurate. Value set will be rounded to the nearest 20mV
     case mV
-        720, 743, 767, 790, 813, 837, 860:
-            mV := lookdown(mv: 720, 743, 767, 790, 813, 837, 860)
+        720..860:
+            mV := (mV - 720) / 20
         OTHER:
             return FALSE
 
-    writeReg (core#VCOMH, 1, @mv)
+    writeReg (core#VCOMH, 1, @mV)
 
 PUB Contrast(level)
 ' Set contrast/brightness level of all subpixels to the same value
@@ -231,7 +241,7 @@ PUB Contrast(level)
 
 PUB ContrastABC(a, b, c)
 ' Set contrast/brightness level of subpixels a, b, c
-'   Valid values: 0..255
+'   Valid values: 0..255 (default a: 138, b: 81, c: 138)
 '   Any other value is ignored
     case a
         0..255:
@@ -269,7 +279,7 @@ PUB DisplayBounds(sx, sy, ex, ey) | tmp[2]
 
 PUB DisplayLines(lines)
 ' Set maximum number of display lines
-'   Valid values: 16..128
+'   Valid values: 16..128 (default: 128)
 '   Any other value returns the current setting
     case lines
         16..128:
@@ -281,7 +291,7 @@ PUB DisplayLines(lines)
 
 PUB DisplayInverted(enabled)
 ' Invert display colors
-'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     case ||enabled
         0, 1:
@@ -294,7 +304,7 @@ PUB DisplayVisibility(mode)
 '   Valid values:
 '       ALL_OFF (0): Turns off all pixels
 '       ALL_ON (1): Turns on all pixels (white)
-'       NORMAL (2): Normal display (display graphics RAM contents)
+'      *NORMAL (2): Normal display (display graphics RAM contents)
 '       INVERTED (3): Like NORMAL, but with inverted colors
 '   NOTE: This setting doesn't affect the contents of graphics RAM, only how they are displayed
     case mode
@@ -309,7 +319,7 @@ PUB Interlaced(enabled) | tmp
 ' Alternate every other display line:
 ' Lines 0..31 will appear on even rows (starting on row 0)
 ' Lines 32..63 will appear on odd rows (starting on row 1)
-'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
     case ||enabled
@@ -325,9 +335,9 @@ PUB Interlaced(enabled) | tmp
 PUB LockOLED(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
-'       ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
+'      *ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
 '       LOCK ($16):   Locked - OLED will not process any commands, except LockOLED(UNLOCK)
-'       CFG_LOCK ($B0): Configuration registers locked
+'      *CFG_LOCK ($B0): Configuration registers locked
 '       CFG_UNLOCK ($B1): Configuration registers unlocked
     case mode
         ALL_UNLOCK, ALL_LOCK, CFG_LOCK, CFG_UNLOCK:
@@ -338,7 +348,7 @@ PUB LockOLED(mode)
 
 PUB MirrorH(enabled) | tmp
 ' Mirror the display, horizontally
-'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
     case ||enabled
@@ -353,7 +363,7 @@ PUB MirrorH(enabled) | tmp
 
 PUB MirrorV(enabled) | tmp
 ' Mirror the display, vertically
-'   Valid values: TRUE (-1 or 1), FALSE (0)
+'   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
     case ||enabled
@@ -368,7 +378,7 @@ PUB MirrorV(enabled) | tmp
 
 PUB Phase1Period(clks) | tmp
 ' Set discharge/phase 1 period, in display clocks
-'   Valid values: 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
+'   Valid values: *5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
 '   Any other value returns the current setting
     tmp := _sh_PHASE12PER
     case clks
@@ -384,7 +394,7 @@ PUB Phase1Period(clks) | tmp
 
 PUB Phase2Period(clks) | tmp
 ' Set charge/phase 2 period, in display clocks
-'   Valid values: 3..15
+'   Valid values: 3..15 (default: 8)
 '   Any other value returns the current setting
     tmp := _sh_PHASE12PER
     case clks
@@ -399,7 +409,7 @@ PUB Phase2Period(clks) | tmp
 
 PUB Phase3Period(clks) | tmp[2]
 ' Set second charge/phase 3 period, in display clocks
-'   Valid values: 1..15
+'   Valid values: 1..15 (default: 8)
 '   Any other value returns the current setting
     case clks
         1..15:
@@ -413,8 +423,7 @@ PUB PlotAccel(x, y, c) | tmp[2]
     x := 0 #> x <# _disp_width-1
     y := 0 #> y <# _disp_height-1
 
-    DisplayBounds(x, x, y, y)
-    time.USleep (5)
+    DisplayBounds(x, y, x, y)
     writeReg (core#WRITERAM, 2, @c)
 
 PUB Powered(enabled) | tmp
@@ -433,8 +442,10 @@ PUB Powered(enabled) | tmp
 
 PUB PrechargeLevel(mV) | tmp
 ' Set first pre-charge voltage level (phase 2) of segment pins, in millivolts
-'   Valid values: 200..600
+'   Valid values: 200..600 (default: 497)
 '   Any other value is ignored
+'   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
+'       so actual voltage may not be accurate. Value set will be rounded to the nearest 13mV
     case mV
         200..600:
             mV := (mv-200) / 13
@@ -445,7 +456,7 @@ PUB PrechargeLevel(mV) | tmp
 
 PUB StartLine(disp_line)
 ' Set display start line
-'   Valid values: 0..127
+'   Valid values: 0..127 (default: 0)
 '   Any other value returns the current setting
     case disp_line
         0..127:
@@ -457,7 +468,7 @@ PUB StartLine(disp_line)
 PUB SubpixelOrder(order)
 ' Set subpixel color order
 '   Valid values:
-'       RGB (0): Red-Green-Blue order
+'      *RGB (0): Red-Green-Blue order
 '       BGR (1): Blue-Green-Red order
 '   Any other value returns the current setting
     case order
@@ -472,7 +483,7 @@ PUB SubpixelOrder(order)
 
 PUB VertOffset(disp_line)
 ' Set display vertical offset, in lines
-'   Valid values: 0..127
+'   Valid values: 0..127 (default: 96)
 '   Any other value is ignored
     case disp_line
         0..127:

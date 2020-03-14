@@ -60,6 +60,7 @@ PUB Main
     _bench_iter := 0
     _ser_row := 3
     Setup
+    display.ClearAll
 
     Demo_Text(336)
     time.Sleep(2)
@@ -81,6 +82,10 @@ PUB Main
     display.ClearAll
 
     Demo_PlotBitmap (1000)
+    time.Sleep (2)
+    display.ClearAll
+
+    Demo_PlotAccel (10000)
     time.Sleep (2)
     display.ClearAll
 
@@ -218,6 +223,18 @@ PUB Demo_MEMScroller(start_addr, end_addr) | pos, st, en
         display.Update
         _bench_iter++
 
+PUB Demo_PlotAccel(reps) | x, y, c
+' Draw random pixels, using the display's native method
+    ser.position(0, _ser_row++)
+    ser.str(string("Demo_PlotAccel"))
+    _bench_type := BT_UNIT
+    repeat reps
+        x := RND (XMAX)
+        y := RND (YMAX)
+        c := (?_rndseed >> 26) << 11 | (?_rndseed >> 25) << 5 | (?_rndseed >> 26)
+        display.PlotAccel(x, y, c)
+        _bench_iter++
+
 PUB Demo_PlotBitmap(reps) | x, y, c
 ' Draw random pixels, using the bitmap library's method
     ser.position(0, _ser_row++)
@@ -237,7 +254,7 @@ PUB FPS_mon
         time.MSleep (1000)
         ser.Position (20, _ser_row-1)
         ser.str (string("FPS: "))
-        ser.str (int.DecZeroed (_bench_iter, 3))
+        ser.str (int.DecZeroed (_bench_iter, 4))
         _bench_iter := 0
 
 PUB RND(max_val) | i
@@ -262,7 +279,7 @@ PUB Sin(angle)
 PUB Setup
 
     repeat until _ser_cog := ser.StartRXTX (SER_RX, SER_TX, 0, SER_BAUD)
-    time.MSleep(100)
+    time.MSleep(30)
     ser.Clear
     ser.str(string("Serial terminal started", ser#CR, ser#LF))
     if _display_cog := display.Start (CS, DC, DIN, CLK, RESET, WIDTH, HEIGHT, @_framebuff)
