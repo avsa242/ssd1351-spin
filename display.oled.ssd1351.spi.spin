@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2020
     Started: Mar 11, 2020
-    Updated: Mar 13, 2020
+    Updated: Mar 29, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -54,7 +54,7 @@ OBJ
 VAR
 
     long _DC, _RES, _MOSI, _SCK, _CS
-    long _draw_buffer
+    long _ptr_framebuffer
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
 
     byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER                            ' Shadow registers
@@ -82,8 +82,8 @@ PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, drawbuffer_
             Reset
             Powered(TRUE)
             time.MSleep(300)
-            LockOLED(ALL_UNLOCK)
-            LockOLED(CFG_UNLOCK)
+            LockDisplay(ALL_UNLOCK)
+            LockDisplay(CFG_UNLOCK)
             return okay
     return FALSE
 
@@ -96,19 +96,19 @@ PUB Address(addr)
 ' Set address of display buffer
 '   Example:
 '       display.Address(@_framebuffer)
-    _draw_buffer := addr
+    _ptr_framebuffer := addr
 
 PUB Defaults
-' Factory defaults
+' Apply power-on-reset default settings
     DisplayBounds(0, 0, 127, 127)
-    AddrIncMode(ADDR_HORIZ)
+    AddrMode(ADDR_HORIZ)
     MirrorH(FALSE)
     SubpixelOrder(RGB)
     MirrorV(FALSE)
     Interlaced(FALSE)
     ColorDepth (COLOR_65K)
-    StartLine(0)
-    VertOffset(96)
+    DisplayStartLine(0)
+    DisplayOffset(96)
     Phase1Period (5)
     Phase2Period (8)
     ClockFreq (3020)
@@ -123,16 +123,16 @@ PUB Defaults
     DisplayVisibility(NORMAL)
 
 PUB DefaultsCommon
-' Defaults that are probably more commonly used
+' Apply settings that may be more commonly used but differ from factory settings
     DisplayBounds(0, 0, _disp_xmax, _disp_ymax)
-    AddrIncMode(ADDR_HORIZ)
+    AddrMode(ADDR_HORIZ)
     MirrorH(TRUE)
     SubpixelOrder(RGB)
     MirrorV(FALSE)
     Interlaced(FALSE)
     ColorDepth (COLOR_65K)
-    StartLine(0)
-    VertOffset(0)
+    DisplayStartLine(0)
+    DisplayOffset(0)
     Phase1Period (5)
     Phase2Period (8)
     ClockFreq (3020)
@@ -146,8 +146,8 @@ PUB DefaultsCommon
     Powered(TRUE)
     DisplayVisibility(NORMAL)
 
-PUB AddrIncMode(mode) | tmp
-' Set display addressing mode
+PUB AddrMode(mode) | tmp
+' Set display internal addressing mode
 '   Valid values:
 '  *ADDR_HORIZ (0): Horizontal addressing mode
 '   ADDR_VERT (1): Vertical addressing mode
@@ -168,7 +168,7 @@ PUB ClearAccel | tmp
         writeReg(core#WRITERAM, 4, @tmp)
 
 PUB ClockDiv(divider) | tmp
-' Set display clock divider
+' Set clock frequency divider used by the display controller
 '   Valid values: 1..1024 (default: 2)
 '   Any other value returns the current setting
     tmp := _sh_CLK
@@ -183,7 +183,7 @@ PUB ClockDiv(divider) | tmp
     writeReg (core#CLOCKDIV, 1, @_sh_CLK)
 
 PUB ClockFreq(freq) | tmp
-' Set display clock frequency, in kHz
+' Set display internal oscillator frequency, in kHz
 '   Valid values: 2500..3100 (default: 3020)
 '   Any other value returns the current setting
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
@@ -220,7 +220,7 @@ PUB ColorDepth(format) | tmp
     writeReg (core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
 PUB COMHVoltage(mV) | tmp
-' Set logic high level for COMmon pins, in millivolts
+' Set logic high level threshold of COM pins rel. to Vcc, in millivolts
 '   Valid values: 720..860 (default: 820)
 '   Any other value returns the current setting
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
@@ -234,7 +234,7 @@ PUB COMHVoltage(mV) | tmp
     writeReg (core#VCOMH, 1, @mV)
 
 PUB Contrast(level)
-' Set contrast/brightness level of all subpixels to the same value
+' Set display contrast/brightness of all subpixels to the same value
 '   Valid values: 0..255
 '   Any other value is ignored
     ContrastABC(level, level, level)
@@ -278,7 +278,7 @@ PUB DisplayBounds(sx, sy, ex, ey) | tmp[2]
     writeReg (core#SETROW, 2, @tmp.byte[2])
 
 PUB DisplayLines(lines)
-' Set maximum number of display lines
+' Set total number of display lines
 '   Valid values: 16..128 (default: 128)
 '   Any other value returns the current setting
     case lines
@@ -298,6 +298,28 @@ PUB DisplayInverted(enabled)
             DisplayVisibility(INVERTED - ||enabled)
         OTHER:
             return FALSE
+
+PUB DisplayOffset(disp_line)
+' Set display offset/vertical shift, in lines
+'   Valid values: 0..127 (default: 96)
+'   Any other value is ignored
+    case disp_line
+        0..127:
+        OTHER:
+            return FALSE
+
+    writeReg (core#DISPLAYOFFSET, 1, @disp_line)
+
+PUB DisplayStartLine(disp_line)
+' Set display start line
+'   Valid values: 0..127 (default: 0)
+'   Any other value returns the current setting
+    case disp_line
+        0..127:
+        OTHER:
+            return FALSE
+
+    writeReg (core#STARTLINE, 1, @disp_line)
 
 PUB DisplayVisibility(mode)
 ' Set display visibility
@@ -332,11 +354,11 @@ PUB Interlaced(enabled) | tmp
     _sh_REMAPCOLOR := (_sh_REMAPCOLOR | enabled) & core#SETREMAP_MASK
     writeReg (core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB LockOLED(mode)
+PUB LockDisplay(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
 '      *ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
-'       LOCK ($16):   Locked - OLED will not process any commands, except LockOLED(UNLOCK)
+'       LOCK ($16): Locked - OLED will not process any commands, except LockDisplay(ALL_UNLOCK)
 '      *CFG_LOCK ($B0): Configuration registers locked
 '       CFG_UNLOCK ($B1): Configuration registers unlocked
     case mode
@@ -419,7 +441,7 @@ PUB Phase3Period(clks) | tmp[2]
     writeReg (core#SETSECPRECHG, 1, @clks)
 
 PUB PlotAccel(x, y, c) | tmp[2]
-' Plot a pixel at x, y in color c, using the display's native/accelerated method
+' Draw a pixel, using the display's native/accelerated plot/pixel function
     x := 0 #> x <# _disp_width-1
     y := 0 #> y <# _disp_height-1
 
@@ -454,17 +476,6 @@ PUB PrechargeLevel(mV) | tmp
 
     writeReg (core#PRECHARGELEVEL, 1, @mV)
 
-PUB StartLine(disp_line)
-' Set display start line
-'   Valid values: 0..127 (default: 0)
-'   Any other value returns the current setting
-    case disp_line
-        0..127:
-        OTHER:
-            return FALSE
-
-    writeReg (core#STARTLINE, 1, @disp_line)
-
 PUB SubpixelOrder(order)
 ' Set subpixel color order
 '   Valid values:
@@ -481,17 +492,6 @@ PUB SubpixelOrder(order)
     _sh_REMAPCOLOR := (_sh_REMAPCOLOR | order) & core#SETREMAP_MASK
     writeReg (core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB VertOffset(disp_line)
-' Set display vertical offset, in lines
-'   Valid values: 0..127 (default: 96)
-'   Any other value is ignored
-    case disp_line
-        0..127:
-        OTHER:
-            return FALSE
-
-    writeReg (core#DISPLAYOFFSET, 1, @disp_line)
-
 PUB Reset
 ' Reset the display controller
     io.High(_RES)
@@ -501,7 +501,7 @@ PUB Reset
 
 PUB Update
 ' Send the draw buffer to the display
-    writeReg(core#WRITERAM, _buff_sz, _draw_buffer)
+    writeReg(core#WRITERAM, _buff_sz, _ptr_framebuffer)
 
 PRI writeReg(reg, nr_bytes, buff_addr) | tmp
 
