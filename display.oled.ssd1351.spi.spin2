@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays (P2 version)
     Copyright (c) 2020
     Started: Mar 12, 2020
-    Updated: Mar 29, 2020
+    Updated: May 9, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -49,7 +49,7 @@ OBJ
 
     core    : "core.con.ssd1351"
     time    : "time"
-    spi     : "com.spi.bitbang-fast"
+    spi     : "com.spi"
     io      : "io"
 
 VAR
@@ -63,7 +63,7 @@ VAR
 PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, CLK_HZ, WIDTH, HEIGHT, drawbuffer_address): okay
 
     if lookdown(CS_PIN: 0..63) and lookdown(DC_PIN: 0..63) and lookdown(DIN_PIN: 0..63) and lookdown(CLK_PIN: 0..63) and lookdown(RES_PIN: 0..63)
-        if okay := spi.start (DIN_PIN, -1, CLK_PIN, CLK_HZ)
+        if okay := spi.start (CLK_PIN, DIN_PIN, -1, CLK_HZ)
             _DC := DC_PIN
             _RES := RES_PIN
             _MOSI := DIN_PIN
@@ -512,17 +512,17 @@ PRI writeReg(reg, nr_bytes, buff_addr) | tmp
         $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9, $D1, $E3:                               ' Single-byte command
             io.Low(_CS)
             io.Low(_DC)
-            spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
+            spi.Write(reg)
             io.High(_CS)
             return
 
         $15, $5C, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, $C7, $CA, $FD:     ' Multi-byte command
             io.Low(_CS)
             io.Low(_DC)
-            spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, reg)
+            spi.Write(reg)
             io.High(_DC)
             repeat tmp from 0 to nr_bytes-1
-                spi.Write(_MOSI, _SCK, core#MOSI_BITORDER, 8, byte[buff_addr][tmp])
+                spi.Write(byte[buff_addr][tmp])
             io.High(_CS)
             return
 
