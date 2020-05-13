@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays (P2 version)
     Copyright (c) 2020
     Started: Mar 12, 2020
-    Updated: May 10, 2020
+    Updated: May 13, 2020
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -296,9 +296,9 @@ PUB DisplayInverted(enabled)
 ' Invert display colors
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
-    case_fast ||enabled
+    case_fast abs(enabled)
         0, 1:
-            DisplayVisibility(INVERTED - ||enabled)
+            DisplayVisibility(INVERTED - abs(enabled))
         OTHER:
             return FALSE
 
@@ -347,9 +347,9 @@ PUB Interlaced(enabled) | tmp
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
-    case_fast ||enabled
+    case_fast abs(enabled)
         0, 1:
-            enabled := (||enabled ^ 1) << core#FLD_COMSPLIT
+            enabled := (abs(enabled) ^ 1) << core#FLD_COMSPLIT
         OTHER:
             return not (((tmp >> core#FLD_COMSPLIT) & %1) * TRUE)
 
@@ -376,9 +376,9 @@ PUB MirrorH(enabled) | tmp
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
-    case_fast ||enabled
+    case_fast abs(enabled)
         0, 1:
-            enabled := (||enabled) << core#FLD_SEGREMAP
+            enabled := (abs(enabled)) << core#FLD_SEGREMAP
         OTHER:
             return ((tmp >> core#FLD_SEGREMAP) & %1) * TRUE
 
@@ -391,9 +391,9 @@ PUB MirrorV(enabled) | tmp
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
     tmp := _sh_REMAPCOLOR
-    case_fast ||enabled
+    case_fast abs(enabled)
         0, 1:
-            enabled := (||enabled) << core#FLD_COMREMAP
+            enabled := (abs(enabled)) << core#FLD_COMREMAP
         OTHER:
             return ((tmp >> core#FLD_COMREMAP) & %1) * TRUE
 
@@ -457,9 +457,9 @@ PUB Powered(enabled) | tmp
 '       OFF/FALSE (0): Turn off display power
 '       ON/TRUE (-1 or 1): Turn on display power
 '   Any other value returns the current setting
-    case_fast ||enabled
+    case_fast abs(enabled)
         OFF, ON:
-            enabled := lookupz(||enabled: core#DISPLAYOFF, core#DISPLAYON)
+            enabled := lookupz(abs(enabled): core#DISPLAYOFF, core#DISPLAYON)
         OTHER:
             return FALSE
 
@@ -506,13 +506,13 @@ PUB Update
 ' Send the draw buffer to the display
     writeReg(core#WRITERAM, _buff_sz, _ptr_drawbuffer)
 
-PRI writeReg(reg, nr_bytes, buff_addr) | tmp
+PRI writeReg(reg_nr, nr_bytes, buff_addr) | tmp
 
-    case_fast reg
+    case_fast reg_nr
         core#WRITERAM:                                                              ' Display RAM
             io.Low(_CS)
             io.Low(_DC)
-            spi.Write(reg)
+            spi.Write(reg_nr)
             io.High(_DC)
             spi.WriteBytes(nr_bytes, buff_addr)
             io.High(_CS)
@@ -520,14 +520,14 @@ PRI writeReg(reg, nr_bytes, buff_addr) | tmp
         $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9, $D1, $E3:                           ' Single-byte command
             io.Low(_CS)
             io.Low(_DC)
-            spi.Write(reg)
+            spi.Write(reg_nr)
             io.High(_CS)
             return
 
         $15, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, $C7, $CA, $FD:  ' Multi-byte command
             io.Low(_CS)
             io.Low(_DC)
-            spi.Write(reg)
+            spi.Write(reg_nr)
             io.High(_DC)
             spi.WriteBytes(nr_bytes, buff_addr)
             io.High(_CS)
