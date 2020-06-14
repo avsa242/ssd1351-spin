@@ -15,6 +15,7 @@
 CON
 
     MAX_COLOR       = 65535
+    BYTESPERPX      = 2
 
 ' Display power on/off modes
     OFF             = 0
@@ -56,6 +57,7 @@ VAR
     long _DC, _RES, _MOSI, _SCK, _CS
     long _ptr_drawbuffer
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
+    word BYTESPERLN
 
     byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER                            ' Shadow registers
 
@@ -77,6 +79,7 @@ PUB Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, drawbuffer_
             _disp_xmax := _disp_width - 1
             _disp_ymax := _disp_height - 1
             _buff_sz := _disp_width * _disp_height * 2
+            BYTESPERLN := _disp_width * BYTESPERPX
 
             Address(drawbuffer_address)
             Reset
