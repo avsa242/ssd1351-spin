@@ -19,11 +19,11 @@ CON
     SER_TX      = 30
     SER_BAUD    = 115_200
 
-    RES_PIN     = 3
-    DC_PIN      = 4
-    CS_PIN      = 0
-    CLK_PIN     = 1
-    DIN_PIN     = 2
+    RES_PIN     = 12
+    DC_PIN      = 11
+    CS_PIN      = 8
+    CLK_PIN     = 9
+    DIN_PIN     = 10
 
     WIDTH       = 128
     HEIGHT      = 64
@@ -507,9 +507,11 @@ PUB Setup
     time.MSleep(30)
     ser.Clear
     ser.str(string("Serial terminal started", ser#CR, ser#LF))
-    if _oled_cog := oled.Start (CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, @_framebuff)
+    if oled.startx(CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, @_framebuff)
+
         ser.str(string("SSD1351 driver started", ser#CR, ser#LF))
         oled.FontAddress(fnt.BaseAddr)
+        oled.fontscale(1)
         oled.FontSize(6, 8)
         oled.DefaultsCommon
         oled.ClearAll
