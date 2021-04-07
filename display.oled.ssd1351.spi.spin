@@ -47,10 +47,10 @@ CON
 
 OBJ
 
-    core    : "core.con.ssd1351"
-    time    : "time"
-    spi     : "com.spi.fast"
-    io      : "io"
+    core    : "core.con.ssd1351"                ' HW-specific constants
+    time    : "time"                            ' timekeeping methods
+    spi     : "com.spi.fast"                    ' PASM SPI engine (20MHz)
+    io      : "io"                              ' I/O pin abstraction
 
 VAR
 
@@ -59,12 +59,13 @@ VAR
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
     word _bytesperln
 
-    byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER                            ' Shadow registers
+    ' shadow registers
+    byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER
 
-PUB Startx(CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): okay
+PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): status
 ' Start driver using custom I/O settings
     if lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31) and lookdown(RES_PIN: 0..31)
-        if okay := spi.start(CS_PIN, CLK_PIN, DIN_PIN, -1)
+        if (status := spi.init(CS_PIN, CLK_PIN, DIN_PIN, -1, core#SPI_MODE))
             _DC := DC_PIN
             _RES := RES_PIN
             _MOSI := DIN_PIN
@@ -78,7 +79,7 @@ PUB Startx(CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuf
             _disp_height := HEIGHT
             _disp_xmax := _disp_width - 1
             _disp_ymax := _disp_height - 1
-            _buff_sz := _disp_width * _disp_height * 2
+            _buff_sz := (_disp_width * _disp_height) * BYTESPERPX
             _bytesperln := _disp_width * BYTESPERPX
 
             address(ptr_dispbuff)
@@ -87,19 +88,25 @@ PUB Startx(CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuf
             time.msleep(300)
             lockdisplay(ALL_UNLOCK)
             lockdisplay(CFG_UNLOCK)
-            return okay
+            return
+    ' if this point is reached, something above failed
+    ' Double check I/O pin assignments, connections, power
+    ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
 PUB Stop{}
 
-    DisplayVisibility(ALL_OFF)
-    Powered (FALSE)
+    displayvisibility(ALL_OFF)
+    powered(FALSE)
+    spi.deinit{}
 
-PUB Address(addr)
-' Set address of display buffer
-'   Example:
-'       display.Address(@_framebuffer)
-    _ptr_drawbuffer := addr
+PUB Address(addr): curr_addr
+' Set framebuffer/display buffer address
+    case addr
+        $0004..$7FFF-addr:
+            _ptr_drawbuffer := addr
+        other:
+            return _ptr_drawbuffer
 
 PUB Defaults{}
 ' Apply power-on-reset default settings
@@ -496,20 +503,24 @@ PUB Update{}
     writereg(core#WRITERAM, _buff_sz, _ptr_drawbuffer)
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | tmp
-
+' Write nr_bytes to device from ptr_buff
     case reg_nr
         $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9, $D1, $E3:
         ' Single-byte command
             io.low(_DC)
-            spi.write(TRUE, @reg_nr, 1, TRUE)
+            spi.deselectafter(true)
+            spi.wr_byte(reg_nr)
             return
 
-        $15, $5C, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, $C7, $CA, $FD:
+        $15, $5C, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, {
+}       $C7, $CA, $FD:
         ' Multi-byte command
             io.low(_DC)
-            spi.write(TRUE, @reg_nr, 1, FALSE)
+            spi.deselectafter(false)
+            spi.wr_byte(reg_nr)
             io.high(_DC)
-            spi.write(TRUE, ptr_buff, nr_bytes, TRUE)
+            spi.deselectafter(true)
+            spi.wrblock_lsbf(ptr_buff, nr_bytes)
             return
 
         other:

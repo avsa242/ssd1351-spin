@@ -507,8 +507,7 @@ PUB Setup
     time.MSleep(30)
     ser.Clear
     ser.str(string("Serial terminal started", ser#CR, ser#LF))
-    if oled.startx(CS_PIN, DC_PIN, DIN_PIN, CLK_PIN, RES_PIN, WIDTH, HEIGHT, @_framebuff)
-
+    if oled.startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, @_framebuff)
         ser.str(string("SSD1351 driver started", ser#CR, ser#LF))
         oled.FontAddress(fnt.BaseAddr)
         oled.fontscale(1)
