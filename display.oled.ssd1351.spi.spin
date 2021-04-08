@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2021
     Started: Mar 11, 2020
-    Updated: Apr 7, 2021
+    Updated: Apr 8, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -54,7 +54,7 @@ OBJ
 
 VAR
 
-    long _DC, _RES, _MOSI, _SCK, _CS
+    long _CS, _DC, _RES
     long _ptr_drawbuffer
     word _disp_width, _disp_height, _disp_xmax, _disp_ymax, _buff_sz
     word _bytesperln
@@ -62,14 +62,17 @@ VAR
     ' shadow registers
     byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER
 
+PUB Null{}
+' This is not a top-level object
+
 PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): status
 ' Start driver using custom I/O settings
-    if lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31) and lookdown(RES_PIN: 0..31)
+    if lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) {
+}   and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31) {
+}   and lookdown(RES_PIN: 0..31)
         if (status := spi.init(CS_PIN, CLK_PIN, DIN_PIN, -1, core#SPI_MODE))
             _DC := DC_PIN
             _RES := RES_PIN
-            _MOSI := DIN_PIN
-            _SCK := CLK_PIN
             _CS := CS_PIN
             io.high(_DC)
             io.output(_DC)
@@ -110,48 +113,65 @@ PUB Address(addr): curr_addr
 
 PUB Defaults{}
 ' Apply power-on-reset default settings
+    displayvisibility(ALL_OFF)
+    displaystartline(0)
+    displaylines(128)
+    clockfreq(3020)
+    clockdiv(1)
+    contrastabc(138, 81, 138)
+    powered(TRUE)
     displaybounds(0, 0, 127, 127)
+    clearaccel{}
+    displayvisibility(NORMAL)
+
+PUB Preset_128x{}
+' Preset: 128px wide, determine settings for height at runtime
+    displaybounds(0, 0, _disp_xmax, _disp_ymax)
     addrmode(ADDR_HORIZ)
-    mirrorh(FALSE)
     subpixelorder(RGB)
-    mirrorv(FALSE)
     interlaced(FALSE)
     colordepth(COLOR_65K)
     displaystartline(0)
-    displayoffset(96)
-    phase1period(5)
-    phase2period(8)
+    displayoffset(0)
     clockfreq(3020)
-    clockdiv(2)
-    phase3period(8)
-    prechargelevel(497)
-    comhvoltage(820)
-    contrastabc(138, 81, 138)
+    clockdiv(1)
+    contrast(127)
+    displaylines(_disp_height)
+
+    powered(TRUE)
+    displayvisibility(NORMAL)
+
+PUB Preset_128x128{}
+' Preset: 128px wide, determine settings for height at runtime
+    displaybounds(0, 0, 127, 127)
+    addrmode(ADDR_HORIZ)
+    subpixelorder(RGB)
+    interlaced(FALSE)
+    colordepth(COLOR_65K)
+    displaystartline(0)
+    displayoffset(0)
+    clockfreq(3020)
+    clockdiv(1)
+    contrast(127)
     displaylines(128)
 
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB DefaultsCommon{}
-' Apply settings that may be more commonly used but differ from factory settings
+PUB Preset_128xHiPerf{}
+' Preset: 128px wide, determine settings for height at runtime
+'   display osc. set to max clock
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
     addrmode(ADDR_HORIZ)
-    mirrorh(TRUE)
     subpixelorder(RGB)
-    mirrorv(FALSE)
     interlaced(FALSE)
     colordepth(COLOR_65K)
     displaystartline(0)
     displayoffset(0)
-    phase1period(5)
-    phase2period(8)
-    clockfreq(3020)
-    clockdiv(2)
-    phase3period(8)
-    prechargelevel(497)
-    comhvoltage(820)
-    contrastabc(138, 81, 138)
-    displaylines(128)
+    clockfreq(3100)
+    clockdiv(1)
+    contrast(127)
+    displaylines(_disp_height)
 
     powered(TRUE)
     displayvisibility(NORMAL)
