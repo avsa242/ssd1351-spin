@@ -103,14 +103,6 @@ PUB Stop{}
     powered(FALSE)
     spi.deinit{}
 
-PUB Address(addr): curr_addr
-' Set framebuffer/display buffer address
-    case addr
-        $0004..$7FFF-addr:
-            _ptr_drawbuffer := addr
-        other:
-            return _ptr_drawbuffer
-
 PUB Defaults{}
 ' Apply power-on-reset default settings
     displayvisibility(ALL_OFF)
@@ -122,6 +114,26 @@ PUB Defaults{}
     powered(TRUE)
     displaybounds(0, 0, 127, 127)
     clearaccel{}
+    displayvisibility(NORMAL)
+
+PUB Preset_OLED_C_Click_96x96{}
+' Preset: 96px wide, 96px high, MikroE OLED C Click
+'   (Parallax #64208, MikroE #MIKROE-1585)
+'   origin (upper-left) isn't at 0, 0 on this panel
+'   start at 16 pixels in from the left, and add that to the right-hand side
+    displaybounds(16, 0, 16+95, 95)
+    addrmode(ADDR_HORIZ)
+    subpixelorder(RGB)
+    interlaced(FALSE)
+    colordepth(COLOR_65K)
+    displaystartline(0)
+    displayoffset(96)
+    clockfreq(3020)
+    clockdiv(1)
+    contrast(127)
+    displaylines(96)
+
+    powered(TRUE)
     displayvisibility(NORMAL)
 
 PUB Preset_128x{}
@@ -175,6 +187,14 @@ PUB Preset_128xHiPerf{}
 
     powered(TRUE)
     displayvisibility(NORMAL)
+
+PUB Address(addr): curr_addr
+' Set framebuffer/display buffer address
+    case addr
+        $0004..$7FFF-_buff_sz:
+            _ptr_drawbuffer := addr
+        other:
+            return _ptr_drawbuffer
 
 PUB AddrMode(mode): curr_mode
 ' Set display internal addressing mode
@@ -283,7 +303,7 @@ PUB ContrastABC(a, b, c) | tmp
 
     tmp.byte[0] := a
     tmp.byte[1] := b
-    tmp.byte[2] := c 
+    tmp.byte[2] := c
     writereg(core#SETCNTRSTABC, 3, @tmp)
 
 PUB DisplayBounds(sx, sy, ex, ey) | tmpx, tmpy
@@ -374,8 +394,7 @@ PUB Interlaced(state): curr_state
         other:
             return (not (((curr_state >> core#COMSPLIT) & 1) == 1))
 
-    _sh_REMAPCOLOR &= core#COMSPLIT
-    _sh_REMAPCOLOR := (_sh_REMAPCOLOR | state) & core#SETREMAP_MASK
+    _sh_REMAPCOLOR := ((curr_state & core#COMSPLIT_MASK) | state)
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
 PUB LockDisplay(mode)

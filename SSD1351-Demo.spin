@@ -25,8 +25,8 @@ CON
     DC_PIN      = 11
     RES_PIN     = 12
 
-    WIDTH       = 128
-    HEIGHT      = 64
+    WIDTH       = 96
+    HEIGHT      = 96
 ' --
 
     ' calculate some constraints used by the demo
