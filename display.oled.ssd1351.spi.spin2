@@ -309,12 +309,12 @@ PUB Char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
 PUB Clear{}
 ' Clear the display directly, bypassing the display buffer
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
-    outa[_DC] := core#CMD
-    outa[_CS] := 0
-    spi.wr_byte(core#WRITERAM)
-    outa[_DC] := core#DATA
+    pinw(_DC, core.CMD)
+    pinl(_CS)
+    spi.wr_byte(core.WRITERAM)
+    pinw(_DC, core.DATA)
     spi.wrwordx_msbf(_bgcolor, _buff_sz/2)
-    outa[_CS] := 1
+    pinh(_CS)
 #endif
 
 PUB ClockDiv(divider): curr_div
@@ -514,21 +514,21 @@ PUB Line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
 ' Draw line from x1, y1 to x2, y2, in color c
     if (x1 == x2)
         displaybounds(x1, y1, x1, y2)           ' vertical
-        outa[_CS] := 0
-        outa[_DC] := core#CMD
-        spi.wr_byte(core#WRITERAM)
-        outa[_DC] := core#DATA
+        pinl(_CS)
+        pinw(_DC, core.CMD)
+        spi.wr_byte(core.WRITERAM)
+        pinw(_DC, core.DATA)
         spi.wrwordx_msbf(c, (||(y2-y1))+1)
-        outa[_CS] := 1
+        pinh(_CS)
         return
     if (y1 == y2)
         displaybounds(x1, y1, x2, y1)           ' horizontal
-        outa[_CS] := 0
-        outa[_DC] := core#CMD
-        spi.wr_byte(core#WRITERAM)
-        outa[_DC] := core#DATA
+        pinl(_CS)
+        pinw(_DC, core.CMD)
+        spi.wr_byte(core.WRITERAM)
+        pinw(_DC, core.DATA)
         spi.wrwordx_msbf(c, (||(x2-x1))+1)
-        outa[_CS] := 1
+        pinh(_CS)
         return
 
     ddx := ||(x2-x1)
@@ -641,32 +641,32 @@ PUB Phase3Period(clks)
 PUB Plot(x, y, c) | cmd_pkt[3]
 ' Draw a pixel, using the display's native/accelerated plot/pixel function
     if (x => 0 and x =< _disp_xmax) and (y => 0 and y =< _disp_ymax)
-        cmd_pkt.byte[0] := core#SETCOLUMN       ' D/C L
+        cmd_pkt.byte[0] := core.SETCOLUMN       ' D/C L
         cmd_pkt.byte[1] := x                    ' D/C H
         cmd_pkt.byte[2] := x
-        cmd_pkt.byte[3] := core#SETROW          ' D/C L
+        cmd_pkt.byte[3] := core.SETROW          ' D/C L
         cmd_pkt.byte[4] := y                    ' D/C H
         cmd_pkt.byte[5] := y
-        cmd_pkt.byte[6] := core#WRITERAM        ' D/C L
+        cmd_pkt.byte[6] := core.WRITERAM        ' D/C L
         cmd_pkt.byte[7] := c.byte[1]            ' D/C H
         cmd_pkt.byte[8] := c.byte[0]
-        outa[_DC] := core#CMD
-        outa[_CS] := 0
+        pinw(_DC, core.CMD)
+        pinl(_CS)
         spi.wr_byte(cmd_pkt.byte[0])
-        outa[_DC] := core#DATA
+        pinw(_DC, core.DATA)
         spi.wrblock_lsbf(@cmd_pkt.byte[1], 2)
 
-        outa[_DC] := core#CMD
+        pinw(_DC, core.CMD)
         spi.wr_byte(cmd_pkt.byte[3])
-        outa[_DC] := core#DATA
+        pinw(_DC, core.DATA)
         spi.wrblock_lsbf(@cmd_pkt.byte[4], 2)
 
-        outa[_DC] := core#CMD
+        pinw(_DC, core.CMD)
         spi.wr_byte(cmd_pkt.byte[6])
-        outa[_DC] := core#DATA
+        pinw(_DC, core.DATA)
         spi.wrblock_lsbf(@cmd_pkt.byte[7], 2)
-        outa[_CS] := 1
-#endif
+        pinh(_CS)
+.endif
 
 PUB Powered(state)
 ' Enable display power
@@ -721,10 +721,10 @@ PUB Reset()
 PUB Update()
 ' Send the draw buffer to the display
 #ifndef GFX_DIRECT
-    pinw(_DC, core#CMD)
+    pinw(_DC, core.CMD)
     pinl(_CS)
-    spi.wr_byte(core#WRITERAM)
-    pinw(_DC, core#DATA)
+    spi.wr_byte(core.WRITERAM)
+    pinw(_DC, core.DATA)
     spi.wrblock_lsbf(_ptr_drawbuffer, _buff_sz)
     pinh(_CS)
 #endif
