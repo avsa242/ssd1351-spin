@@ -666,7 +666,7 @@ PUB Plot(x, y, c) | cmd_pkt[3]
         pinw(_DC, core.DATA)
         spi.wrblock_lsbf(@cmd_pkt.byte[7], 2)
         pinh(_CS)
-.endif
+#endif
 
 PUB Powered(state)
 ' Enable display power
