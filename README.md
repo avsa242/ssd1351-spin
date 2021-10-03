@@ -7,8 +7,8 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 
 ## Salient Features
 
-* SPI connection at 20MHz (P1), 20MHz (P2). 4-wire SPI: DIN, CLK, CS, DC, and RESET
-* Integration with the generic bitmap graphics library
+* SPI connection at 20MHz. 4-wire SPI: DIN, CLK, CS, DC (and optionally RESET)
+* Integration with the generic bitmap graphics library, as well as some support for unbuffered, direct-to-display operations
 * Display mirroring
 * Control display visibility (independent of display RAM contents)
 * Set subpixel order
@@ -22,15 +22,15 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 
 P1/SPIN1:
 * spin-standard-library
-* P1/SPIN1: 1 extra core/cog for the PASM SPI driver
+* P1/SPIN1: 1 extra core/cog for the PASM SPI engine
 
 P2/SPIN2:
 * p2-spin-standard-library
 
 ## Compiler Compatibility
 
-* P1/SPIN1: OpenSpin (tested with 1.00.81)
-* P2/SPIN2: FastSpin (tested with 4.2.5-beta))
+* P1/SPIN1: OpenSpin (tested with 1.00.81), FlexSpin (tested with 5.9.4-beta)
+* P2/SPIN2: FlexSpin (tested with 5.9.4-beta))
 * ~~BST~~ (incompatible - no preprocessor)
 * ~~Propeller Tool~~ (incompatible - no preprocessor)
 * ~~PNut~~ (incompatible - no preprocessor)
@@ -45,5 +45,5 @@ P2/SPIN2:
 - [ ] Add support for enhanced performance setting
 - [x] Port to P2/SPIN2
 - [x] Use the 20MHz SPI driver for the P1
-- [ ] Add some direct-draw methods to the driver for apps that don't need a full buffered display
+- [ ] Add some direct-draw methods to the driver for apps that don't need a full buffered display - WIP
 - [ ] Test external memory options with driver
