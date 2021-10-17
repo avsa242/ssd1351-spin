@@ -2,15 +2,15 @@
     --------------------------------------------
     Filename: display.oled.ssd1351.spi.spin2
     Author: Jesse Burt
-    Description: Driver for Solomon Systech SSD1351 RGB OLED displays
-        (P2 version)
+    Description: Driver for Solomon Systech SSD1351 RGB OLED displays (P2 version)
     Copyright (c) 2021
     Started: Mar 11, 2020
-    Updated: Oct 4, 2021
+    Updated: Oct 17, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
 #define SSD1351
+#define MEMMV_NATIVE wordmove
 #include "lib.gfx.bitmap.spin2"
 
 CON
@@ -32,6 +32,7 @@ CON
     COLOR_65K       = %00   ' or %01
     COLOR_262K      = %10
     COLOR_262K65K2  = %11
+
 ' Address increment mode
     ADDR_HORIZ      = 0
     ADDR_VERT       = 1
@@ -48,7 +49,6 @@ CON
 
 ' Character attributes
     DRAWBG          = 1 << 0
-
 
 OBJ
 
@@ -71,15 +71,13 @@ PUB Null()
 PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, SCK_FREQ, WIDTH, HEIGHT, ptr_dispbuff): status
 ' Start driver using custom I/O settings
     if lookdown(CS_PIN: 0..63) and lookdown(DC_PIN: 0..63) {
-}   and lookdown(DIN_PIN: 0..63) and lookdown(CLK_PIN: 0..63) {
-}   and lookdown(RES_PIN: 0..63)
+}   and lookdown(DIN_PIN: 0..63) and lookdown(CLK_PIN: 0..63)
         if (status := spi.init(CLK_PIN, DIN_PIN, -1, core.SPI_MODE, SCK_FREQ))
             _DC := DC_PIN
             _RES := RES_PIN
             _CS := CS_PIN
             pinh(_CS)
             pinh(_DC)
-            pinh(_RES)
             _disp_width := WIDTH
             _disp_height := HEIGHT
             _disp_xmax := _disp_width - 1
@@ -212,8 +210,33 @@ PUB AddrMode(mode): curr_mode
     writereg(core.SETREMAP, 1, @_sh_REMAPCOLOR)
 
 #ifdef GFX_DIRECT
-PUB Box(x1, y1, x2, y2, c, f) | cmd_pkt[2], sy
+PUB Bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
+' Display bitmap
+'   ptr_bmap: pointer to bitmap data
+'   (xs, ys): upper-left corner of bitmap
+'   bm_wid: width of bitmap, in pixels
+'   bm_lns: number of lines in bitmap
+    displaybounds(xs, ys, xs+(bm_wid-1), ys+(bm_lns-1))
+    pinl(_CS)
+    pinw(_DC, core.CMD)
+    spi.wr_byte(core.WRITERAM)
 
+    ' calc total number of pixels to write, based on dims and color depth
+    ' clamp to a minimum of 1 to avoid odd behavior
+    nr_pix := 1 #> ((xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX)
+
+    pinw(_DC, core.DATA)
+    spi.wrblock_lsbf(ptr_bmap, nr_pix)
+    pinh(_CS)
+#endif
+
+#ifdef GFX_DIRECT
+PUB Box(x1, y1, x2, y2, c, f) | cmd_pkt[2]
+' Draw a box
+'   (x1, y1): upper-left corner of box
+'   (x2, y2): lower-right corner of box
+'   c: color
+'   f: filled flag (0: no fill, nonzero: fill)
     if (x2 < x1) or (y2 < y1)
         return
     if f
@@ -247,7 +270,7 @@ PUB Box(x1, y1, x2, y2, c, f) | cmd_pkt[2], sy
         pinw(_DC, core.DATA)
         spi.wrwordx_msbf(c, (x2-x1)+1)
 
-        displaybounds(x1, y2, y2, y2)           ' bottom
+        displaybounds(x1, y2, x2, y2)           ' bottom
         pinl(_CS)
         pinw(_DC, core.CMD)
         spi.wr_byte(core.WRITERAM)
@@ -287,7 +310,7 @@ PUB Char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
             repeat gl_c from 0 to lastgl_c      ' column
                 repeat gl_r from 0 to lastgl_r  ' row
                     ' if the current offset in the glyph is a set bit, draw it
-                    if byte[_font_addr][(ch << 3) + gl_c] & (|< gl_r)
+                    if byte[_font_addr][(ch << 3) + gl_c] & (decod gl_r)
                         plot((_charpx_x + gl_c), (_charpx_y + gl_r), _fgcolor)
                     else
                     ' otherwise, draw the background color, if enabled
@@ -306,7 +329,7 @@ PUB Char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
 #endif
 
 #ifdef GFX_DIRECT
-PUB Clear{}
+PUB Clear()
 ' Clear the display directly, bypassing the display buffer
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
     pinw(_DC, core.CMD)
@@ -640,7 +663,7 @@ PUB Phase3Period(clks)
 #ifdef GFX_DIRECT
 PUB Plot(x, y, c) | cmd_pkt[3]
 ' Draw a pixel, using the display's native/accelerated plot/pixel function
-    if (x => 0 and x =< _disp_xmax) and (y => 0 and y =< _disp_ymax)
+    if (x >= 0 and x <= _disp_xmax) and (y >= 0 and y <= _disp_ymax)
         cmd_pkt.byte[0] := core.SETCOLUMN       ' D/C L
         cmd_pkt.byte[1] := x                    ' D/C H
         cmd_pkt.byte[2] := x
@@ -728,6 +751,7 @@ PUB Update()
     spi.wrblock_lsbf(_ptr_drawbuffer, _buff_sz)
     pinh(_CS)
 #endif
+
 
 PRI writeReg(reg_nr, nr_bytes, ptr_buff) | tmp
 ' Write nr_bytes to device from ptr_buff

@@ -5,12 +5,14 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2021
     Started: Mar 11, 2020
-    Updated: Oct 3, 2021
+    Updated: Oct 17, 2021
     See end of file for terms of use.
     --------------------------------------------
 }
 #define SSD1351
+#define MEMMV_NATIVE wordmove
 #include "lib.gfx.bitmap.spin"
+
 CON
 
     MAX_COLOR       = 65535
@@ -70,8 +72,7 @@ PUB Null{}
 PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): status
 ' Start driver using custom I/O settings
     if lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) {
-}   and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31) {
-}   and lookdown(RES_PIN: 0..31)
+}   and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31)
         if (status := spi.init(CLK_PIN, DIN_PIN, -1, core#SPI_MODE))
             _DC := DC_PIN
             _RES := RES_PIN
@@ -212,6 +213,27 @@ PUB AddrMode(mode): curr_mode
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
 #ifdef GFX_DIRECT
+PUB Bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
+' Display bitmap
+'   ptr_bmap: pointer to bitmap data
+'   (xs, ys): upper-left corner of bitmap
+'   bm_wid: width of bitmap, in pixels
+'   bm_lns: number of lines in bitmap
+    displaybounds(xs, ys, xs+(bm_wid-1), ys+(bm_lns-1))
+    outa[_CS] := 0
+    outa[_DC] := core#CMD
+    spi.wr_byte(core#WRITERAM)
+
+    ' calc total number of pixels to write, based on dims and color depth
+    ' clamp to a minimum of 1 to avoid odd behavior
+    nr_pix := 1 #> ((xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX)
+
+    outa[_DC] := core#DATA
+    spi.wrblock_lsbf(ptr_bmap, nr_pix)
+    outa[_CS] := 1
+#endif
+
+#ifdef GFX_DIRECT
 PUB Box(x1, y1, x2, y2, c, f) | cmd_pkt[2], sy
 
     if (x2 < x1) or (y2 < y1)
@@ -247,7 +269,7 @@ PUB Box(x1, y1, x2, y2, c, f) | cmd_pkt[2], sy
         outa[_DC] := core#DATA
         spi.wrwordx_msbf(c, (x2-x1)+1)
 
-        displaybounds(x1, y2, y2, y2)           ' bottom
+        displaybounds(x1, y2, x2, y2)           ' bottom
         outa[_CS] := 0
         outa[_DC] := core#CMD
         spi.wr_byte(core#WRITERAM)
