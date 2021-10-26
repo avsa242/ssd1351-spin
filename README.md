@@ -40,10 +40,3 @@ P2/SPIN2:
 * P1 has insufficient RAM to buffer the entire display
 * Reading from display not currently supported
 
-## TODO
-
-- [ ] Add support for enhanced performance setting
-- [x] Port to P2/SPIN2
-- [x] Use the 20MHz SPI driver for the P1
-- [ ] Add some direct-draw methods to the driver for apps that don't need a full buffered display - WIP
-- [ ] Test external memory options with driver
