@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2022
     Started: Mar 11, 2020
-    Updated: Jan 25, 2022
+    Updated: Jan 30, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -58,10 +58,6 @@ OBJ
 VAR
 
     long _CS, _DC, _RES
-    long _ptr_drawbuffer
-    word _bytesperln, _buff_sz
-
-    byte _disp_width, _disp_height, _disp_xmax, _disp_ymax
     byte _offs_x, _offs_y
 
     ' shadow registers
