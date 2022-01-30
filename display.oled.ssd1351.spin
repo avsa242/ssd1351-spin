@@ -1,6 +1,6 @@
 {
     --------------------------------------------
-    Filename: display.oled.ssd1351.spi.spin
+    Filename: display.oled.ssd1351.spin
     Author: Jesse Burt
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2022
