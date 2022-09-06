@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2022
     Started: Mar 11, 2020
-    Updated: Sep 5, 2022
+    Updated: Sep 6, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -46,9 +46,6 @@ CON
     CFG_LOCK        = $B0
     CFG_UNLOCK      = $B1
 
-' Character attributes
-    DRAWBG          = 1 << 0
-
 OBJ
 
     core    : "core.con.ssd1351"                ' HW-specific constants
@@ -63,10 +60,10 @@ VAR
     ' shadow registers
     byte _sh_CLK, _sh_REMAPCOLOR, _sh_PHASE12PER
 
-PUB Null{}
+PUB null{}
 ' This is not a top-level object
 
-PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): status
+PUB startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuff): status
 ' Start driver using custom I/O settings
     if lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) {
 }   and lookdown(DIN_PIN: 0..31) and lookdown(CLK_PIN: 0..31)
@@ -96,13 +93,13 @@ PUB Startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, WIDTH, HEIGHT, ptr_dispbuf
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
-PUB Stop{}
+PUB stop{}
 
     displayvisibility(ALL_OFF)
     powered(FALSE)
     spi.deinit{}
 
-PUB Defaults{}
+PUB defaults{}
 ' Apply power-on-reset default settings
     displayvisibility(ALL_OFF)
     displaystartline(0)
@@ -115,7 +112,7 @@ PUB Defaults{}
     clear{}
     displayvisibility(NORMAL)
 
-PUB Preset_ClickC_Away{}
+PUB preset_clickc_away{}
 ' Preset: MikroE OLED C Click (96x96)
 '   (Parallax #64208, MikroE #MIKROE-1585)
 '   **Oriented so glass panel is facing away from user user, PCB facing towards
@@ -138,7 +135,7 @@ PUB Preset_ClickC_Away{}
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB Preset_ClickC_Towards{}
+PUB preset_clickc_towards{}
 ' Preset: MikroE OLED C Click (96x96)
 '   (Parallax #64208, MikroE #MIKROE-1585)
 '   **Oriented so glass panel is facing towards user, PCB facing away
@@ -161,7 +158,7 @@ PUB Preset_ClickC_Towards{}
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB Preset_128x{}
+PUB preset_128x{}
 ' Preset: 128px wide, determine settings for height at runtime
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
     addrmode(ADDR_HORIZ)
@@ -178,7 +175,7 @@ PUB Preset_128x{}
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB Preset_128x128{}
+PUB preset_128x128{}
 ' Preset: 128px wide, 128px high
     displaybounds(0, 0, 127, 127)
     addrmode(ADDR_HORIZ)
@@ -195,7 +192,7 @@ PUB Preset_128x128{}
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB Preset_128xHiPerf{}
+PUB preset_128xhiperf{}
 ' Preset: 128px wide, determine settings for height at runtime
 '   display osc. set to max clock
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
@@ -213,7 +210,7 @@ PUB Preset_128xHiPerf{}
     powered(TRUE)
     displayvisibility(NORMAL)
 
-PUB Address(addr): curr_addr
+PUB address(addr): curr_addr
 ' Set framebuffer/display buffer address
     case addr
         $0004..$7FFF-_buff_sz:
@@ -221,7 +218,7 @@ PUB Address(addr): curr_addr
         other:
             return _ptr_drawbuffer
 
-PUB AddrMode(mode): curr_mode
+PUB addrmode(mode): curr_mode
 ' Set display internal addressing mode
 '   Valid values:
 '  *ADDR_HORIZ (0): Horizontal addressing mode
@@ -236,7 +233,7 @@ PUB AddrMode(mode): curr_mode
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
 #ifdef GFX_DIRECT
-PUB Bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
+PUB bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
 ' Display bitmap
 '   ptr_bmap: pointer to bitmap data
 '   (xs, ys): upper-left corner of bitmap
@@ -257,7 +254,7 @@ PUB Bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
 #endif
 
 #ifdef GFX_DIRECT
-PUB Box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
+PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
 ' Draw a box
 '   (x1, y1): upper-left corner of box
 '   (x2, y2): lower-right corner of box
@@ -320,7 +317,7 @@ PUB Box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
 #endif
 
 #ifdef GFX_DIRECT
-PUB Char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
+PUB char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
 ' Draw character from currently loaded font
     lastgl_c := _font_width-1
     lastgl_r := _font_height-1
@@ -355,7 +352,7 @@ PUB Char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
 #endif
 
 #ifdef GFX_DIRECT
-PUB Clear{}
+PUB clear{}
 ' Clear the display directly, bypassing the display buffer
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
     outa[_DC] := core#CMD
@@ -367,12 +364,12 @@ PUB Clear{}
 
 #else
 
-PUB Clear{}
+PUB clear{}
 ' Clear the display buffer
     wordfill(_ptr_drawbuffer, _bgcolor, _buff_sz/2)
 #endif
 
-PUB ClockDiv(divider): curr_div
+PUB clockdiv(divider): curr_div
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (default: 1)
 '   Any other value returns the current setting
@@ -386,7 +383,7 @@ PUB ClockDiv(divider): curr_div
     _sh_CLK := ((curr_div & core#CLK_DIV_MASK) | divider)
     writereg(core#CLKDIV, 1, @_sh_CLK)
 
-PUB ClockFreq(freq): curr_freq
+PUB clockfreq(freq): curr_freq
 ' Set display internal oscillator frequency, in kHz
 '   Valid values: 2500..3100 (default: 3020)
 '   Any other value returns the current setting
@@ -404,7 +401,7 @@ PUB ClockFreq(freq): curr_freq
     _sh_CLK := ((curr_freq & core#FOSCFREQ_MASK) | freq)
     writereg(core#CLKDIV, 1, @_sh_CLK)
 
-PUB ColorDepth(format): curr_fmt
+PUB colordepth(format): curr_fmt
 ' Set expected color format of pixel data
 '   Valid values:
 '      *COLOR_65K (0): 16-bit/65536 color format 1
@@ -421,7 +418,7 @@ PUB ColorDepth(format): curr_fmt
     _sh_REMAPCOLOR := ((curr_fmt & core#COLORFMT_MASK) | format)
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB COMHVoltage(level): curr_lvl
+PUB comhvoltage(level): curr_lvl
 ' Set logic high level threshold of COM pins rel. to Vcc, in millivolts
 '   Valid values: 720..860 (default: 820)
 '   Any other value is ignored
@@ -434,13 +431,13 @@ PUB COMHVoltage(level): curr_lvl
         other:
             return
 
-PUB Contrast(level)
+PUB contrast(level)
 ' Set display contrast/brightness of all subpixels to the same value
 '   Valid values: 0..255
 '   Any other value is ignored
     contrastabc(level, level, level)
 
-PUB ContrastABC(a, b, c) | tmp
+PUB contrastabc(a, b, c) | tmp
 ' Set contrast/brightness level of subpixels a, b, c
 '   Valid values: 0..255 (default a: 138, b: 81, c: 138)
 '   Any other value is ignored
@@ -462,7 +459,7 @@ PUB ContrastABC(a, b, c) | tmp
     tmp.byte[2] := c
     writereg(core#SETCNTRSTABC, 3, @tmp)
 
-PUB DisplayBounds(sx, sy, ex, ey) | tmpx, tmpy
+PUB displaybounds(sx, sy, ex, ey) | tmpx, tmpy
 ' Set drawable display region for subsequent drawing operations
 '   Valid values:
 '       sx, ex: 0..127
@@ -490,7 +487,7 @@ PUB DisplayBounds(sx, sy, ex, ey) | tmpx, tmpy
     writereg(core#SETCOLUMN, 2, @tmpx)
     writereg(core#SETROW, 2, @tmpy)
 
-PUB DisplayLines(lines)
+PUB displaylines(lines)
 ' Set total number of display lines
 '   Valid values: 16..128 (default: 128)
 '   Any other value is ignored
@@ -501,7 +498,7 @@ PUB DisplayLines(lines)
         other:
             return
 
-PUB DisplayInverted(state)
+PUB displayinverted(state)
 ' Invert display colors
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value is ignored
@@ -511,13 +508,13 @@ PUB DisplayInverted(state)
         other:
             return
 
-PUB DisplayOffset(x, y)
+PUB displayoffset(x, y)
 ' Set display offset
     _offs_x := 0 #> x <# 127
     y := 0 #> y <# 127
     writereg(core#DISPOFFSET, 1, @y)            ' SSD1351 built-in
 
-PUB DisplayStartLine(disp_line)
+PUB displaystartline(disp_line)
 ' Set display start line
 '   Valid values: 0..127 (default: 0)
 '   Any other value is ignored
@@ -528,7 +525,7 @@ PUB DisplayStartLine(disp_line)
 
     writereg(core#STARTLINE, 1, @disp_line)
 
-PUB DisplayVisibility(mode)
+PUB displayvisibility(mode)
 ' Set display visibility
 '   Valid values:
 '       ALL_OFF (0): Turns off all pixels
@@ -544,7 +541,7 @@ PUB DisplayVisibility(mode)
         other:
             return
 
-PUB Interlaced(state): curr_state
+PUB interlaced(state): curr_state
 ' Alternate every other display line:
 ' Lines 0..31 will appear on even rows (starting on row 0)
 ' Lines 32..63 will appear on odd rows (starting on row 1)
@@ -561,7 +558,7 @@ PUB Interlaced(state): curr_state
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
 #ifdef GFX_DIRECT
-PUB Line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
+PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
 ' Draw line from x1, y1 to x2, y2, in color c
     if (x1 == x2)
         displaybounds(x1, y1, x1, y2)           ' vertical
@@ -607,7 +604,7 @@ PUB Line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
             y1 += sy
 #endif
 
-PUB LockDisplay(mode)
+PUB lockdisplay(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
 '      *ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
@@ -620,7 +617,7 @@ PUB LockDisplay(mode)
         other:
             return
 
-PUB MirrorH(state): curr_state
+PUB mirrorh(state): curr_state
 ' Mirror the display, horizontally
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
@@ -634,7 +631,7 @@ PUB MirrorH(state): curr_state
     _sh_REMAPCOLOR := ((curr_state & core#SEGREMAP_MASK) | state)
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB MirrorV(state): curr_state
+PUB mirrorv(state): curr_state
 ' Mirror the display, vertically
 '   Valid values: TRUE (-1 or 1), *FALSE (0)
 '   Any other value returns the current setting
@@ -648,7 +645,7 @@ PUB MirrorV(state): curr_state
     _sh_REMAPCOLOR := ((curr_state & core#COMREMAP_MASK) | state)
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB Phase1Period(clks): curr_per
+PUB phase1period(clks): curr_per
 ' Set discharge/phase 1 period, in display clocks
 '   Valid values: *5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31
 '   Any other value returns the current setting
@@ -663,7 +660,7 @@ PUB Phase1Period(clks): curr_per
     clks := ((curr_per & core#PHASE1_MASK) | clks)
     writereg(core#PRECHG, 1, @_sh_PHASE12PER)
 
-PUB Phase2Period(clks): curr_per
+PUB phase2period(clks): curr_per
 ' Set charge/phase 2 period, in display clocks
 '   Valid values: 3..15 (default: 8)
 '   Any other value returns the current setting
@@ -677,7 +674,7 @@ PUB Phase2Period(clks): curr_per
     _sh_PHASE12PER := ((curr_per & core#PHASE2_MASK) | clks)
     writereg(core#PRECHG, 1, @_sh_PHASE12PER)
 
-PUB Phase3Period(clks)
+PUB phase3period(clks)
 ' Set second charge/phase 3 period, in display clocks
 '   Valid values: 1..15 (default: 8)
 '   Any other value is ignored
@@ -688,7 +685,7 @@ PUB Phase3Period(clks)
 
     writereg(core#SETSECPRECHG, 1, @clks)
 
-PUB Plot(x, y, color) | cmd_pkt[3]
+PUB plot(x, y, color) | cmd_pkt[3]
 ' Plot pixel at (x, y) in color
     if (x < 0 or x > _disp_xmax) or (y < 0 or y > _disp_ymax)
         return                                  ' coords out of bounds, ignore
@@ -725,7 +722,7 @@ PUB Plot(x, y, color) | cmd_pkt[3]
 #endif
 
 #ifndef GFX_DIRECT
-PUB Point(x, y): pix_clr
+PUB point(x, y): pix_clr
 ' Get color of pixel at x, y
     x := 0 #> x <# _disp_xmax
     y := 0 #> y <# _disp_ymax
@@ -733,7 +730,7 @@ PUB Point(x, y): pix_clr
     return word[_ptr_drawbuffer][x + (y * _disp_width)]
 #endif
 
-PUB Powered(state)
+PUB powered(state)
 ' Enable display power
 '   Valid values:
 '       OFF/FALSE (0): Turn off display power
@@ -746,7 +743,7 @@ PUB Powered(state)
         other:
             return
 
-PUB PrechargeLevel(level)
+PUB prechargelevel(level)
 ' Set first pre-charge voltage level (phase 2) of segment pins, in millivolts
 '   Valid values: 200..600 (default: 497)
 '   Any other value is ignored
@@ -759,7 +756,7 @@ PUB PrechargeLevel(level)
         other:
             return
 
-PUB SubpixelOrder(order): curr_ord
+PUB subpixelorder(order): curr_ord
 ' Set subpixel color order
 '   Valid values:
 '      *RGB (0): Red-Green-Blue order
@@ -775,7 +772,7 @@ PUB SubpixelOrder(order): curr_ord
     _sh_REMAPCOLOR := ((curr_ord & core#SUBPIX_ORDER_MASK) | order)
     writereg(core#SETREMAP, 1, @_sh_REMAPCOLOR)
 
-PUB Reset{}
+PUB reset{}
 ' Reset the display controller
     if lookdown(_RES: 0..31)
         outa[_RES] := 1
@@ -784,7 +781,7 @@ PUB Reset{}
         time.usleep(2)
         outa[_RES] := 1
 
-PUB Update{}
+PUB update{}
 ' Send the draw buffer to the display
 #ifndef GFX_DIRECT
     displaybounds(0, 0, _disp_xmax, _disp_ymax)
@@ -797,7 +794,7 @@ PUB Update{}
 #endif
 
 #ifndef GFX_DIRECT
-PRI memFill(xs, ys, val, count)
+PRI memfill(xs, ys, val, count)
 ' Fill region of display buffer memory
 '   xs, ys: Start of region
 '   val: Color
@@ -805,7 +802,7 @@ PRI memFill(xs, ys, val, count)
     wordfill(_ptr_drawbuffer + ((xs << 1) + (ys * _bytesperln)), ((val >> 8) & $FF) | ((val << 8) & $FF00), count)
 #endif
 
-PRI writeReg(reg_nr, nr_bytes, ptr_buff) | tmp
+PRI writereg(reg_nr, nr_bytes, ptr_buff) | tmp
 ' Write nr_bytes to device from ptr_buff
     case reg_nr
         $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9, $D1, $E3:
