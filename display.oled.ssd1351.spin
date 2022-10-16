@@ -5,7 +5,7 @@
     Description: Driver for Solomon Systech SSD1351 RGB OLED displays
     Copyright (c) 2022
     Started: Mar 11, 2020
-    Updated: Oct 7, 2022
+    Updated: Oct 16, 2022
     See end of file for terms of use.
     --------------------------------------------
 }
@@ -50,7 +50,7 @@ OBJ
 
     core    : "core.con.ssd1351"                ' HW-specific constants
     time    : "time"                            ' timekeeping methods
-    spi     : "com.spi.fast-nocs"               ' PASM SPI engine (20MHz)
+    spi     : "com.spi.20mhz"               ' PASM SPI engine (20MHz)
 
 VAR
 
@@ -311,7 +311,9 @@ PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
 #endif
 
 #ifdef GFX_DIRECT
-PUB char(ch) | gl_c, gl_r, lastgl_c, lastgl_r
+PUB tx = putchar
+PUB char = putchar
+PUB putchar(ch) | gl_c, gl_r, lastgl_c, lastgl_r
 ' Draw character from currently loaded font
     lastgl_c := _font_width-1
     lastgl_r := _font_height-1
