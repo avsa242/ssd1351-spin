@@ -57,6 +57,7 @@ CON
     MOSI            = 2
     DC              = 3
     RST             = 4
+    SPI_FREQ        = 10_000_000
 
 OBJ
 
