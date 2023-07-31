@@ -48,8 +48,8 @@ CON
 
     { default I/O settings; these can be overridden in the parent object }
     { display dimensions }
-    WIDTH           = 128
-    HEIGHT          = 128
+    WIDTH           = 96
+    HEIGHT          = 64
 
     { SPI }
     CS              = 0
