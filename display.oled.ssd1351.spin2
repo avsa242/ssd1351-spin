@@ -600,8 +600,10 @@ PUB prechg_level(level)
     level := (((200 #> level <# 600) - 200) / 13)
     writereg(core.PRECHGLEVEL, 1, @level)
 
+#ifdef GFX_DIRECT
 PUB scroll_up_fs(px)
 ' dummy method
+#endif
 
 PUB subpix_order(order)
 ' Set subpixel color order

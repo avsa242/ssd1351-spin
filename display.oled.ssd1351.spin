@@ -620,8 +620,10 @@ PUB reset{}
         time.usleep(2)
         outa[_RES] := 1
 
+#ifdef GFX_DIRECT
 PUB scroll_up_fs(px)
 ' dummy method
+#endif
 
 PUB show{}
 ' Send the draw buffer to the display
