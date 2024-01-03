@@ -7,7 +7,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 
 ## Salient Features
 
-* SPI connection at 20MHz. 4-wire SPI: DIN, CLK, CS, DC (and optionally RESET)
+* SPI connection at fixed 20MHz (P1), up to 20MHz (P2); 4-wire: DIN, CLK, CS, DC (and optionally RESET)
 * Integration with the generic bitmap graphics library, as well as some support for unbuffered, direct-to-display operations
 * Display mirroring
 * Control display visibility (independent of display RAM contents)
@@ -33,16 +33,16 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1        | SPIN1    | FlexSpin (6.5.0)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (6.5.0)       | Native/PASM  | OK                    |
-| P2        | SPIN2    | FlexSpin (6.5.0)       | NuCode       | FTBFS                 |
-| P2        | SPIN2    | FlexSpin (6.5.0)       | Native/PASM2 | OK                    |
+| P1        | SPIN1    | FlexSpin (6.8.0)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (6.8.0)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (6.8.0)       | NuCode       | OK (Untested)         |
+| P2        | SPIN2    | FlexSpin (6.8.0)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
 
 
 ## Limitations
 
-* P1 driver limited to less than maximum resolution when built using a display buffer, as it has insufficient RAM to buffer the entire display (doesn't apply when built #defining `GFX_DIRECT`)
+* Maximum display resolution is limited when using buffered mode with the P1 driver, due to memory usage (doesn't apply when built #defining `GFX_DIRECT`)
 * Reading from display not currently supported
 
