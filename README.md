@@ -10,7 +10,7 @@ This is a P8X32A/Propeller, P2X8C4M64P/Propeller 2 driver object for Solomon Sys
 
 * SPI connection at fixed 20MHz (P1), up to 20MHz (P2); 4-wire: DIN, CLK, CS, DC (and optionally RESET)
 * Integration with the generic bitmap graphics library, as well as some support for unbuffered, direct-to-display operations
-* Display mirroring
+* Display mirroring, rotation
 * Control display visibility (independent of display RAM contents)
 * Set subpixel order
 * Set color depth (16, 18-bit can be set; currently only 16-bit supported by driver)
@@ -40,6 +40,11 @@ P2/SPIN2:
 | P2        | SPIN2    | FlexSpin (6.9.0)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
+
+
+## Hardware Compatibility
+
+* Tested with Adafruit P/N #1431, Newhaven P/N NHD-1.5-128128ASC3
 
 
 ## Limitations
