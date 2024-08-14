@@ -62,11 +62,13 @@ CON
     DC              = 3
     RST             = 4
 
+
 OBJ
 
     core:   "core.con.ssd1351"                  ' HW-specific constants
     time:   "time"                              ' timekeeping methods
     spi:    "com.spi.20mhz"                     ' PASM SPI engine (20MHz)
+
 
 VAR
 
@@ -81,8 +83,10 @@ VAR
     ' shadow registers
     byte _clkdiv, _rmapcolor, _phs1_2
 
+
 PUB null()
 ' This is not a top-level object
+
 
 PUB start(): status
 ' Start the driver using default I/O settings
@@ -91,6 +95,7 @@ PUB start(): status
 #else
     return startx(CS, SCK, MOSI, DC, RST, WIDTH, HEIGHT, @_framebuffer)
 #endif
+
 
 PUB startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, ptr_dispbuff): status
 ' Start driver using custom I/O settings
@@ -116,6 +121,7 @@ PUB startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, ptr_dispbu
     ' Lastly - make sure you have at least one free core/cog
     return FALSE
 
+
 PUB stop()
 ' Stop the driver
     visibility(ALL_OFF)
@@ -123,6 +129,7 @@ PUB stop()
     spi.deinit()
     dira[_CS] := 0
     dira[_DC] := 0
+
 
 PUB defaults()
 ' Apply power-on-reset default settings
@@ -136,6 +143,7 @@ PUB defaults()
     draw_area(0, 0, 127, 127)
     clear()
     visibility(NORMAL)
+
 
 PUB preset_newhaven_nhd_1p5 = preset_adafruit_1431
 PUB preset_adafruit_1431()
@@ -154,6 +162,7 @@ PUB preset_adafruit_1431()
     powered(TRUE)
     visibility(NORMAL)
 
+
 PUB preset_newhaven_nhd_1p5_port_up = preset_adafruit_1431_port_up
 PUB preset_adafruit_1431_port_up()
 ' Preset: Adafruit #1431 (128x128)
@@ -162,6 +171,7 @@ PUB preset_adafruit_1431_port_up()
     rotation(false)
     mirror_h(false)
     mirror_v(true)
+
 
 PUB preset_newhaven_nhd_1p5_port_down = preset_adafruit_1431_port_down
 PUB preset_adafruit_1431_port_down()
@@ -172,6 +182,7 @@ PUB preset_adafruit_1431_port_down()
     mirror_h(true)
     mirror_v(false)
 
+
 PUB preset_newhaven_nhd_1p5_land_left = preset_adafruit_1431_land_left
 PUB preset_adafruit_1431_land_left()
 ' Preset: Adafruit #1431 (128x128)
@@ -181,6 +192,7 @@ PUB preset_adafruit_1431_land_left()
     mirror_h(true)
     mirror_v(true)
 
+
 PUB preset_newhaven_nhd_1p5_land_right = preset_adafruit_1431_land_right
 PUB preset_adafruit_1431_land_right()
 ' Preset: Adafruit #1431 (128x128)
@@ -189,6 +201,7 @@ PUB preset_adafruit_1431_land_right()
     rotation(true)
     mirror_h(false)
     mirror_v(false)
+
 
 PUB preset_clickc_away()
 ' Preset: MikroE OLED C Click (96x96)
@@ -213,6 +226,7 @@ PUB preset_clickc_away()
     powered(TRUE)
     visibility(NORMAL)
 
+
 PUB preset_clickc_towards()
 ' Preset: MikroE OLED C Click (96x96)
 '   (Parallax #64208, MikroE #MIKROE-1585)
@@ -236,6 +250,7 @@ PUB preset_clickc_towards()
     powered(TRUE)
     visibility(NORMAL)
 
+
 PUB preset_128x()
 ' Preset: 128px wide, determine settings for height at runtime
     draw_area(0, 0, _disp_xmax, _disp_ymax)
@@ -253,6 +268,7 @@ PUB preset_128x()
     powered(TRUE)
     visibility(NORMAL)
 
+
 PUB preset_128x128()
 ' Preset: 128px wide, 128px high
     draw_area(0, 0, 127, 127)
@@ -269,6 +285,7 @@ PUB preset_128x128()
 
     powered(TRUE)
     visibility(NORMAL)
+
 
 PUB preset_128xhiperf()
 ' Preset: 128px wide, determine settings for height at runtime
@@ -288,6 +305,7 @@ PUB preset_128xhiperf()
     powered(TRUE)
     visibility(NORMAL)
 
+
 PUB addr_mode(mode)
 ' Set display internal addressing mode
 '   Valid values:
@@ -295,6 +313,7 @@ PUB addr_mode(mode)
 '   ADDR_VERT (1): Vertical addressing mode
     _rmapcolor := ((_rmapcolor & core.SEGREMAP_MASK) | (ADDR_HORIZ #> mode <# ADDR_VERT))
     writereg(core.SETREMAP, 1, @_rmapcolor)
+
 
 #ifdef GFX_DIRECT
 PUB bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
@@ -316,6 +335,7 @@ PUB bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
     spi.wrblock_lsbf(ptr_bmap, nr_pix)
     outa[_CS] := 1
 #endif
+
 
 #ifdef GFX_DIRECT
 PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
@@ -380,6 +400,7 @@ PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
     outa[_CS] := 1
 #endif
 
+
 #ifdef GFX_DIRECT
 PUB clear()
 ' Clear the display directly, bypassing the display buffer
@@ -398,11 +419,13 @@ PUB clear()
     wordfill(_ptr_drawbuffer, _bgcolor, _buff_sz/2)
 #endif
 
+
 PUB clk_div(divider)
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (clamped to range)
     _clkdiv := ((_clkdiv & core.CLK_DIV_MASK) | ((1 #> divider <# 16)-1))
     writereg(core.CLKDIV, 1, @_clkdiv)
+
 
 PUB clk_freq(freq)
 ' Set display internal oscillator frequency, in kHz
@@ -414,6 +437,7 @@ PUB clk_freq(freq)
     _clkdiv := ((freq & core.FOSCFREQ_MASK) | freq)
     writereg(core.CLKDIV, 1, @_clkdiv)
 
+
 PUB color_depth(format)
 ' Set expected color format of pixel data
 '   Valid values:
@@ -424,6 +448,7 @@ PUB color_depth(format)
     _rmapcolor := ((_rmapcolor & core.COLORFMT_MASK) | format)
     writereg(core.SETREMAP, 1, @_rmapcolor)
 
+
 PUB comh_voltage(level)
 ' Set logic high level threshold of COM pins rel. to Vcc, in millivolts
 '   Valid values: 720..860 (clamped to range; POR: 820)
@@ -432,10 +457,12 @@ PUB comh_voltage(level)
     level := (((720 #> level <# 860) - 720) / 20)
     writereg(core.VCOMH, 1, @level)
 
+
 PUB contrast(level)
 ' Set display contrast/brightness of all subpixels to the same value
 '   Valid values: 0..255 (clamped to range)
     contrast_abc(level, level, level)
+
 
 PUB contrast_abc(a, b, c) | tmp
 ' Set contrast/brightness level of subpixels a, b, c
@@ -444,6 +471,7 @@ PUB contrast_abc(a, b, c) | tmp
     tmp.byte[1] := (0 #> b <# 255)
     tmp.byte[2] := (0 #> c <# 255)
     writereg(core.SETCNTRSTABC, 3, @tmp)
+
 
 PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
 ' Set drawable display region for subsequent drawing operations
@@ -472,6 +500,7 @@ PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
     writereg(core.SETCOLUMN, 2, @tmpx)
     writereg(core.SETROW, 2, @tmpy)
 
+
 PUB disp_lines(lines)
 ' Set total number of display lines
 '   Valid values: 16..128 (clamped to range; POR: 128)
@@ -479,10 +508,12 @@ PUB disp_lines(lines)
     lines := ((16 #> lines <# 128) - 1)
     writereg(core.SETMUXRATIO, 1, @lines)
 
+
 PUB invert_colors(state)
 ' Invert display colors
 '   Valid values: TRUE (non-zero), *FALSE (0)
     visibility(INVERTED - ((state <> 0) & 1))
+
 
 PUB disp_offset(x, y)
 ' Set display offset
@@ -490,11 +521,13 @@ PUB disp_offset(x, y)
     y := (0 #> y <# 127)
     writereg(core.DISPOFFSET, 1, @y)            ' SSD1351 built-in
 
+
 PUB disp_start_line(sline)
 ' Set display start line
 '   Valid values: 0..127 (clamped to range; POR: 0)
     sline := (0 #> sline <# 127)
     writereg(core.STARTLINE, 1, @sline)
+
 
 PUB interlace_ena(state)
 ' Alternate every other display line:
@@ -504,6 +537,7 @@ PUB interlace_ena(state)
     state := ((((state <> 0) & 1) ^ 1) << core.COMSPLIT)
     _rmapcolor := ((_rmapcolor & core.COMSPLIT_MASK) | state)
     writereg(core.SETREMAP, 1, @_rmapcolor)
+
 
 #ifdef GFX_DIRECT
 PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
@@ -552,6 +586,7 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
             y1 += sy
 #endif
 
+
 PUB disp_lock(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
@@ -565,17 +600,20 @@ PUB disp_lock(mode)
         other:
             return
 
+
 PUB mirror_h(state)
 ' Mirror the display, horizontally
 '   Valid values: TRUE (non-zero), *FALSE (0)
     _rmapcolor := ((_rmapcolor & core.SEGREMAP_MASK) | (((state <> 0) & 1) << core.SEGREMAP))
     writereg(core.SETREMAP, 1, @_rmapcolor)
 
+
 PUB mirror_v(state)
 ' Mirror the display, vertically
 '   Valid values: TRUE (non-zero), *FALSE (0)
     _rmapcolor := ((_rmapcolor & core.COMREMAP_MASK) | (((state <> 0) & 1) << core.COMREMAP))
     writereg(core.SETREMAP, 1, @_rmapcolor)
+
 
 PUB phase1_period(clks)
 ' Set discharge/phase 1 period, in display clocks
@@ -584,6 +622,7 @@ PUB phase1_period(clks)
     clks := ((_phs1_2 & core.PHASE1_MASK) | clks)
     writereg(core.PRECHG, 1, @_phs1_2)
 
+
 PUB phase2_period(clks)
 ' Set charge/phase 2 period, in display clocks
 '   Valid values: 3..15 (clamped to range; POR: 8)
@@ -591,11 +630,13 @@ PUB phase2_period(clks)
     _phs1_2 := ((_phs1_2 & core.PHASE2_MASK) | ((3 #> clks <# 15) << core.PHASE2))
     writereg(core.PRECHG, 1, @_phs1_2)
 
+
 PUB phase3_period(clks)
 ' Set second charge/phase 3 period, in display clocks
 '   Valid values: 1..15 (clamped to range; POR: 8)
     clks := (1 #> clks <# 15)
     writereg(core.SETSECPRECHG, 1, @clks)
+
 
 PUB plot(x, y, color) | cmd_pkt[3]
 ' Plot pixel at (x, y) in color
@@ -633,6 +674,7 @@ PUB plot(x, y, color) | cmd_pkt[3]
     word[_ptr_drawbuffer][x + (y * _disp_width)] := color
 #endif
 
+
 #ifndef GFX_DIRECT
 PUB point(x, y): pix_clr
 ' Get color of pixel at x, y
@@ -640,6 +682,7 @@ PUB point(x, y): pix_clr
     y := (0 #> y <# _disp_ymax)
     return word[_ptr_drawbuffer][x + (y * _disp_width)]
 #endif
+
 
 PUB powered(state)
 ' Enable display power
@@ -649,6 +692,7 @@ PUB powered(state)
     state := (((state <> 0) & 1) + core.DISPOFF)
     writereg(state, 0, 0)
 
+
 PUB prechg_level(level)
 ' Set first pre-charge voltage level (phase 2) of segment pins, in millivolts
 '   Valid values: 200..600 (default: 497)
@@ -656,6 +700,7 @@ PUB prechg_level(level)
 '       so actual voltage may not be accurate. Value set will be rounded to the nearest 13mV
     level := (((200 #> level <# 600) - 200) / 13)
     writereg(core.PRECHGLEVEL, 1, @level)
+
 
 PUB reset()
 ' Reset the display controller
@@ -666,6 +711,7 @@ PUB reset()
         time.usleep(2)
         outa[_RES] := 1
 
+
 PUB rotation(state)
 ' Rotate display
 '   Valid values: TRUE (non-zero values), FALSE (0)
@@ -673,16 +719,19 @@ PUB rotation(state)
     _rmapcolor := ( (_rmapcolor & core.ADDRINC_MASK) | ((state <> 0) & 1) )
     writereg(core.SETREMAP, 1, @_rmapcolor)
 
+
 #ifdef GFX_DIRECT
 PUB scroll_up_fs(px)
 ' dummy method
 #endif
+
 
 PUB set_seg_current_scale_factor(s)
 ' Set segment current scaling factor, in 16ths
 '   s: 1..16 (clamped to range; default is 16)
     s := (1 #> s <# 16)-1
     writereg(core.MASTCNTRST_CURR_CTRL, 1, @s)
+
 
 PUB show()
 ' Send the draw buffer to the display
@@ -696,6 +745,7 @@ PUB show()
     outa[_CS] := 1
 #endif
 
+
 PUB subpix_order(order)
 ' Set subpixel color order
 '   Valid values:
@@ -704,6 +754,7 @@ PUB subpix_order(order)
     order := ((RGB #> order <# BGR) << core.SUBPIX_ORDER)
     _rmapcolor := ((_rmapcolor & core.SUBPIX_ORDER_MASK) | order)
     writereg(core.SETREMAP, 1, @_rmapcolor)
+
 
 PUB visibility(mode)
 ' Set display visibility
@@ -717,6 +768,7 @@ PUB visibility(mode)
     mode := ((ALL_OFF #> mode <# INVERTED) + core.DISPALLOFF)
     writereg(mode, 0, 0)
 
+
 #ifndef GFX_DIRECT
 PRI memfill(xs, ys, val, count)
 ' Fill region of display buffer memory
@@ -725,6 +777,7 @@ PRI memfill(xs, ys, val, count)
 '   count: Number of consecutive memory locations to write
     wordfill(_ptr_drawbuffer + ((xs << 1) + (ys * _bytesperln)), ((val >> 8) & $FF) | ((val << 8) & $FF00), count)
 #endif
+
 
 PRI writereg(reg_nr, nr_bytes, ptr_buff) | tmp
 ' Write nr_bytes to device from ptr_buff
@@ -747,6 +800,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | tmp
             return
         other:
             return
+
 
 DAT
 {
