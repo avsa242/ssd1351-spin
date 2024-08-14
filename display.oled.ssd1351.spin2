@@ -14,6 +14,24 @@
 
 CON
 
+    { default I/O settings; these can be overridden in the parent object }
+    { display dimensions }
+    WIDTH           = 96
+    HEIGHT          = 64
+    XMAX            = WIDTH-1
+    YMAX            = HEIGHT-1
+    CENTERX         = WIDTH/2
+    CENTERY         = HEIGHT/2
+
+    { SPI }
+    CS              = 0
+    SCK             = 1
+    MOSI            = 2
+    DC              = 3
+    RST             = 4
+    SPI_FREQ        = 10_000_000
+
+
     MAX_COLOR       = 65535
     BYTESPERPX      = 2
 
@@ -45,23 +63,6 @@ CON
     ALL_LOCK        = $16
     CFG_LOCK        = $B0
     CFG_UNLOCK      = $B1
-
-    { default I/O settings; these can be overridden in the parent object }
-    { display dimensions }
-    WIDTH           = 96
-    HEIGHT          = 64
-    XMAX            = WIDTH-1
-    YMAX            = HEIGHT-1
-    CENTERX         = WIDTH/2
-    CENTERY         = HEIGHT/2
-
-    { SPI }
-    CS              = 0
-    SCK             = 1
-    MOSI            = 2
-    DC              = 3
-    RST             = 4
-    SPI_FREQ        = 10_000_000
 
 
 OBJ
