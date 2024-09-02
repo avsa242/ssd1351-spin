@@ -709,7 +709,9 @@ PUB reset()
         outa[_RES] := 1
         dira[_RES] := 1
         outa[_RES] := 0
+#ifdef __OUTPUT_ASM__
         time.usleep(2)
+#endif
         outa[_RES] := 1
 
 

@@ -1,15 +1,15 @@
 {
-    --------------------------------------------
-    Filename: SSD1351-MinimalDemo.spin
-    Description: Demo of the SSD1351 driver
+----------------------------------------------------------------------------------------------------
+    Filename:       SSD1351-MinimalDemo.spin
+    Description:    Demo of the SSD1351 driver
         * minimal code example
-    Author: Jesse Burt
-    Copyright (c) 2024
-    Started: Jan 3, 2024
-    Updated: Jan 3, 2024
-    See end of file for terms of use.
-    --------------------------------------------
+    Author:         Jesse Burt
+    Started:        Jan 3, 2024
+    Updated:        Sep 2, 2024
+    Copyright (c) 2024 - See end of file for terms of use.
+----------------------------------------------------------------------------------------------------
 }
+
 CON
 
     _clkmode    = xtal1 + pll16x

@@ -116,8 +116,10 @@ CON
 ' Other constants
     SEL_EXTERNAL_VCC        = $8E
 
-PUB null{}
+
+PUB null()
 ' This is not a top-level object
+
 
 DAT
 {

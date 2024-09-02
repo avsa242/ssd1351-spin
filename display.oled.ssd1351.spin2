@@ -706,7 +706,9 @@ PUB reset()
     if (lookdown(_RES: 0..63))
         pinh(_RES)
         pinl(_RES)
+#ifdef __OUTPUT_ASM__
         waitus(2)
+#endif
         pinh(_RES)
 
 
