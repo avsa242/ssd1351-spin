@@ -18,11 +18,14 @@ CON
 OBJ
 
     fnt:    "font.5x8"
-    disp:   "display.oled.ssd1351" |    WIDTH=96, HEIGHT=96, CS=0, SCK=1, MOSI=2, DC=3, RST=4, ...
-                                        SPI_FREQ=10_000_000
+    disp:   "display.oled.ssd1351" |    WIDTH=96, HEIGHT=96, CS=16+8, SCK=16+9, MOSI=16+11, DC=16+5, RST=16+7, ...
+                                        SPI_FREQ=5_000_000
 
 
 PUB main()
+
+    ' NOTE: Your display's board may have an EN pin (e.g., the MikroE Click). Ensure this pin
+    '   is pulled high or it may not appear to display anything.
 
     { start the driver }
     disp.start()

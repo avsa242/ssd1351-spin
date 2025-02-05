@@ -23,6 +23,9 @@ OBJ
 
 PUB main()
 
+    ' NOTE: Your display's board may have an EN pin (e.g., the MikroE Click). Ensure this pin
+    '   is pulled high or it may not appear to display anything.
+
     { start the driver }
     disp.start()
 

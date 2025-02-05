@@ -4,8 +4,8 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Apr 1, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Feb 5, 2025
+    Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
@@ -474,6 +474,25 @@ PUB contrast_abc(a, b, c) | tmp
     writereg(core.SETCNTRSTABC, 3, @tmp)
 
 
+con
+
+    ENHANCED    = 1
+
+
+PUB disp_perf(v) | tmp
+' Enable enhanced display performance
+'   v:  ENHANCED (1) or false (0)
+    if ( v == ENHANCED )
+        tmp.byte[0] := $a4
+    else
+        tmp.byte[0] := $00
+
+    tmp.byte[1] := $00
+    tmp.byte[2] := $00
+
+    writereg(core.DISPENH, 3, @tmp)
+
+
 PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
 ' Set drawable display region for subsequent drawing operations
 '   Valid values:
@@ -807,7 +826,7 @@ PRI writereg(reg_nr, nr_bytes, ptr_buff) | tmp
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2025 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

@@ -34,21 +34,20 @@ P2/SPIN2:
 
 | Processor | Language | Compiler               | Backend      | Status                |
 |-----------|----------|------------------------|--------------|-----------------------|
-| P1        | SPIN1    | FlexSpin (6.9.0)       | Bytecode     | OK                    |
-| P1        | SPIN1    | FlexSpin (6.9.0)       | Native/PASM  | OK                    |
-| P2        | SPIN2    | FlexSpin (6.9.0)       | NuCode       | OK (Untested)         |
-| P2        | SPIN2    | FlexSpin (6.9.0)       | Native/PASM2 | OK                    |
+| P1        | SPIN1    | FlexSpin (6.9.4)       | Bytecode     | OK                    |
+| P1        | SPIN1    | FlexSpin (6.9.4)       | Native/PASM  | OK                    |
+| P2        | SPIN2    | FlexSpin (6.9.4)       | NuCode       | Runtime issues        |
+| P2        | SPIN2    | FlexSpin (6.9.4)       | Native/PASM2 | OK                    |
 
 (other versions or toolchains not listed are __not supported__, and _may or may not_ work)
 
 
 ## Hardware Compatibility
 
-* Tested with Adafruit P/N #1431, Newhaven P/N NHD-1.5-128128ASC3
+* Tested with Adafruit P/N #1431, Newhaven P/N NHD-1.5-128128ASC3, MikroE P/N 5545
 
 
 ## Limitations
 
 * Maximum display resolution is limited when using buffered mode with the P1 driver, due to memory usage (doesn't apply when built #defining `GFX_DIRECT`)
-* Reading from display not currently supported
 
