@@ -4,7 +4,7 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Feb 5, 2025
+    Updated:        Feb 6, 2025
     Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -312,8 +312,8 @@ PUB addr_mode(mode)
 '   Valid values:
 '  *ADDR_HORIZ (0): Horizontal addressing mode
 '   ADDR_VERT (1): Vertical addressing mode
-    _rmapcolor := ((_rmapcolor & core.SEGREMAP_MASK) | (ADDR_HORIZ #> mode <# ADDR_VERT))
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    _rmapcolor := ( (_rmapcolor & core.SEGREMAP_MASK) | (ADDR_HORIZ #> mode <# ADDR_VERT) )
+    command(core.SETREMAP, _rmapcolor)
 
 
 #ifdef GFX_DIRECT
@@ -323,14 +323,14 @@ PUB bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
 '   (xs, ys): upper-left corner of bitmap
 '   bm_wid: width of bitmap, in pixels
 '   bm_lns: number of lines in bitmap
-    draw_area(xs, ys, xs+(bm_wid-1), ys+(bm_lns-1))
+    draw_area(xs, ys, xs+(bm_wid-1), ys+(bm_lns-1) )
     outa[_CS] := 0
     outa[_DC] := core.CMD
     spi.wr_byte(core.WRITERAM)
 
     ' calc total number of pixels to write, based on dims and color depth
     ' clamp to a minimum of 1 to avoid odd behavior
-    nr_pix := 1 #> ((xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX)
+    nr_pix := 1 #> ( (xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX)
 
     outa[_DC] := core.DATA
     spi.wrblock_lsbf(ptr_bmap, nr_pix)
@@ -345,7 +345,7 @@ PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
 '   (x2, y2): lower-right corner of box
 '   c: color
 '   fill: filled flag (0: no fill, nonzero: fill)
-    if ((x2 < x1) or (y2 < y1))
+    if ( (x2 < x1) or (y2 < y1) )
         return
     if (fill)
         cmd_pkt.byte[0] := core.SETCOLUMN       ' D/C L
@@ -369,7 +369,7 @@ PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
         outa[_DC] := core.CMD
         spi.wr_byte(core.WRITERAM)
         outa[_DC] := core.DATA
-        spi.wrwordx_msbf(c, ((y2-y1)+1) * ((x2-x1)+1))
+        spi.wrwordx_msbf(c, ( (y2-y1)+1) * ( (x2-x1)+1) )
     else
         draw_area(x1, y1, x2, y1)               ' top
         outa[_CS] := 0
@@ -424,8 +424,8 @@ PUB clear()
 PUB clk_div(divider)
 ' Set clock frequency divider used by the display controller
 '   Valid values: 1..16 (clamped to range)
-    _clkdiv := ((_clkdiv & core.CLK_DIV_MASK) | ((1 #> divider <# 16)-1))
-    writereg(core.CLKDIV, 1, @_clkdiv)
+    _clkdiv := ( (_clkdiv & core.CLK_DIV_MASK) | ( (1 #> divider <# 16)-1) )
+    command(core.CLKDIV, _clkdiv)
 
 
 PUB clk_freq(freq)
@@ -434,9 +434,9 @@ PUB clk_freq(freq)
 '   NOTE: Range is interpolated, based on the datasheet min/max values and
 '   number of steps, so actual clock frequency may not be accurate.
 '   Value set will be rounded to the nearest 40kHz
-    freq := ((((2500 #> freq <# 3100) - 2500) / 40) << core.FOSCFREQ)
-    _clkdiv := ((freq & core.FOSCFREQ_MASK) | freq)
-    writereg(core.CLKDIV, 1, @_clkdiv)
+    freq := ( ( ( (2500 #> freq <# 3100) - 2500) / 40) << core.FOSCFREQ)
+    _clkdiv := ( (freq & core.FOSCFREQ_MASK) | freq)
+    command(core.CLKDIV, _clkdiv)
 
 
 PUB color_depth(format)
@@ -445,9 +445,9 @@ PUB color_depth(format)
 '      *COLOR_65K (0): 16-bit/65536 color format 1
 '       COLOR_262K (1): 18-bits/262144 color format
 '       COLOR_262K65K2 (2): 18-bit/262144 color format, 16-bit/65536 color format 2
-    format := ((COLOR_65K #> format <# COLOR_262K65K2) << core.COLORFMT)
-    _rmapcolor := ((_rmapcolor & core.COLORFMT_MASK) | format)
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    format := ( (COLOR_65K #> format <# COLOR_262K65K2) << core.COLORFMT)
+    _rmapcolor := ( (_rmapcolor & core.COLORFMT_MASK) | format)
+    command(core.SETREMAP, _rmapcolor)
 
 
 PUB comh_voltage(level)
@@ -455,8 +455,8 @@ PUB comh_voltage(level)
 '   Valid values: 720..860 (clamped to range; POR: 820)
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
 '       so actual voltage may not be accurate. Value set will be rounded to the nearest 20mV
-    level := (((720 #> level <# 860) - 720) / 20)
-    writereg(core.VCOMH, 1, @level)
+    level := ( ( (720 #> level <# 860) - 720) / 20)
+    command(core.VCOMH, level)
 
 
 PUB contrast(level)
@@ -471,7 +471,7 @@ PUB contrast_abc(a, b, c) | tmp
     tmp.byte[0] := (0 #> a <# 255)
     tmp.byte[1] := (0 #> b <# 255)
     tmp.byte[2] := (0 #> c <# 255)
-    writereg(core.SETCNTRSTABC, 3, @tmp)
+    command(core.SETCNTRSTABC, tmp, 3)
 
 
 con
@@ -490,7 +490,7 @@ PUB disp_perf(v) | tmp
     tmp.byte[1] := $00
     tmp.byte[2] := $00
 
-    writereg(core.DISPENH, 3, @tmp)
+    command(core.DISPENH, tmp, 3)
 
 
 PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
@@ -499,7 +499,7 @@ PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
 '       sx, ex: 0..127
 '       sy, ey: 0..127
 '   Any other value will be ignored
-    ifnot (lookup(sx: 0..127) or lookup(sy: 0..127) or lookup(ex: 0..127) or lookup(ey: 0..127))
+    ifnot (lookup(sx: 0..127) or lookup(sy: 0..127) or lookup(ex: 0..127) or lookup(ey: 0..127) )
         return
 
     tmpx.byte[0] := (sx + _offs_x)
@@ -517,36 +517,36 @@ PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
         tmpy.byte[2] := tmpy.byte[0]
         tmpy.byte[0] := tmpy.byte[1]
         tmpy.byte[1] := tmpy.byte[2]
-    writereg(core.SETCOLUMN, 2, @tmpx)
-    writereg(core.SETROW, 2, @tmpy)
+    command(core.SETCOLUMN, tmpx, 2)
+    command(core.SETROW, tmpy, 2)
 
 
 PUB disp_lines(lines)
 ' Set total number of display lines
 '   Valid values: 16..128 (clamped to range; POR: 128)
 '   Any other value is ignored
-    lines := ((16 #> lines <# 128) - 1)
-    writereg(core.SETMUXRATIO, 1, @lines)
+    lines := ( (16 #> lines <# 128) - 1)
+    command(core.SETMUXRATIO, lines)
 
 
 PUB invert_colors(state)
 ' Invert display colors
 '   Valid values: TRUE (non-zero), *FALSE (0)
-    visibility(INVERTED - ((state <> 0) & 1))
+    visibility(INVERTED - ( (state <> 0) & 1) )
 
 
 PUB disp_offset(x, y)
 ' Set display offset
     _offs_x := (0 #> x <# 127)
     y := (0 #> y <# 127)
-    writereg(core.DISPOFFSET, 1, @y)            ' SSD1351 built-in
+    command(core.DISPOFFSET, y)                 ' SSD1351 built-in
 
 
 PUB disp_start_line(sline)
 ' Set display start line
 '   Valid values: 0..127 (clamped to range; POR: 0)
     sline := (0 #> sline <# 127)
-    writereg(core.STARTLINE, 1, @sline)
+    command(core.STARTLINE, sline)
 
 
 PUB interlace_ena(state)
@@ -554,9 +554,9 @@ PUB interlace_ena(state)
 ' Lines 0..31 will appear on even rows (starting on row 0)
 ' Lines 32..63 will appear on odd rows (starting on row 1)
 '   Valid values: TRUE (non-zero), *FALSE (0)
-    state := ((((state <> 0) & 1) ^ 1) << core.COMSPLIT)
-    _rmapcolor := ((_rmapcolor & core.COMSPLIT_MASK) | state)
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    state := ( ( ( (state <> 0) & 1) ^ 1) << core.COMSPLIT)
+    _rmapcolor := ( (_rmapcolor & core.COMSPLIT_MASK) | state)
+    command(core.SETREMAP, _rmapcolor)
 
 
 #ifdef GFX_DIRECT
@@ -568,7 +568,7 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
         outa[_DC] := core.CMD
         spi.wr_byte(core.WRITERAM)
         outa[_DC] := core.DATA
-        spi.wrwordx_msbf(c, (||(y2-y1))+1)
+        spi.wrwordx_msbf(c, (||(y2-y1) )+1)
         outa[_CS] := 1
         return
     if (y1 == y2)
@@ -577,7 +577,7 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
         outa[_DC] := core.CMD
         spi.wr_byte(core.WRITERAM)
         outa[_DC] := core.DATA
-        spi.wrwordx_msbf(c, (||(x2-x1))+1)
+        spi.wrwordx_msbf(c, (||(x2-x1) )+1)
         outa[_CS] := 1
         return
 
@@ -593,7 +593,7 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
     if (y1 < y2)
         sy := 1
 
-    repeat until ((x1 == x2) and (y1 == y2))
+    repeat until ( (x1 == x2) and (y1 == y2) )
         plot(x1, y1, c)
         e2 := (err << 1)
 
@@ -616,7 +616,7 @@ PUB disp_lock(mode)
 '       CFG_UNLOCK ($B1): Configuration registers unlocked
     case mode
         ALL_UNLOCK, ALL_LOCK, CFG_LOCK, CFG_UNLOCK:
-            writereg(core.SETLOCK, 1, @mode)
+            command(core.SETLOCK, mode)
         other:
             return
 
@@ -624,43 +624,43 @@ PUB disp_lock(mode)
 PUB mirror_h(state)
 ' Mirror the display, horizontally
 '   Valid values: TRUE (non-zero), *FALSE (0)
-    _rmapcolor := ((_rmapcolor & core.SEGREMAP_MASK) | (((state <> 0) & 1) << core.SEGREMAP))
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    _rmapcolor := ( (_rmapcolor & core.SEGREMAP_MASK) | ( ( (state <> 0) & 1) << core.SEGREMAP) )
+    command(core.SETREMAP, _rmapcolor)
 
 
 PUB mirror_v(state)
 ' Mirror the display, vertically
 '   Valid values: TRUE (non-zero), *FALSE (0)
-    _rmapcolor := ((_rmapcolor & core.COMREMAP_MASK) | (((state <> 0) & 1) << core.COMREMAP))
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    _rmapcolor := ( (_rmapcolor & core.COMREMAP_MASK) | ( ( (state <> 0) & 1) << core.COMREMAP) )
+    command(core.SETREMAP, _rmapcolor)
 
 
 PUB phase1_period(clks)
 ' Set discharge/phase 1 period, in display clocks
 '   Valid values: 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31 (clamped to range; POR: 5)
-    clks := ((((5 #> clks <# 31) - 1) / 2) - 1)
-    clks := ((_phs1_2 & core.PHASE1_MASK) | clks)
-    writereg(core.PRECHG, 1, @_phs1_2)
+    clks := ( ( ( (5 #> clks <# 31) - 1) / 2) - 1)
+    clks := ( (_phs1_2 & core.PHASE1_MASK) | clks)
+    command(core.PRECHG, _phs1_2)
 
 
 PUB phase2_period(clks)
 ' Set charge/phase 2 period, in display clocks
 '   Valid values: 3..15 (clamped to range; POR: 8)
-    clks := ((3 #> clks <# 15) << core.PHASE2)
-    _phs1_2 := ((_phs1_2 & core.PHASE2_MASK) | ((3 #> clks <# 15) << core.PHASE2))
-    writereg(core.PRECHG, 1, @_phs1_2)
+    clks := ( (3 #> clks <# 15) << core.PHASE2)
+    _phs1_2 := ( (_phs1_2 & core.PHASE2_MASK) | ( (3 #> clks <# 15) << core.PHASE2) )
+    command(core.PRECHG, _phs1_2)
 
 
 PUB phase3_period(clks)
 ' Set second charge/phase 3 period, in display clocks
 '   Valid values: 1..15 (clamped to range; POR: 8)
     clks := (1 #> clks <# 15)
-    writereg(core.SETSECPRECHG, 1, @clks)
+    command(core.SETSECPRECHG, clks)
 
 
 PUB plot(x, y, color) | cmd_pkt[3]
 ' Plot pixel at (x, y) in color
-    if ((x < 0) or (x > _disp_xmax) or (y < 0) or (y > _disp_ymax))
+    if ( (x < 0) or (x > _disp_xmax) or (y < 0) or (y > _disp_ymax) )
         return                                  ' coords out of bounds, ignore
 #ifdef GFX_DIRECT
 ' direct to display
@@ -709,8 +709,8 @@ PUB powered(state)
 '   Valid values:
 '       OFF/FALSE (0): Turn off display power
 '       ON/TRUE (non-zero): Turn on display power
-    state := (((state <> 0) & 1) + core.DISPOFF)
-    writereg(state, 0, 0)
+    state := ( ( (state <> 0) & 1) + core.DISPOFF)
+    command(state)
 
 
 PUB prechg_level(level)
@@ -718,13 +718,13 @@ PUB prechg_level(level)
 '   Valid values: 200..600 (default: 497)
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
 '       so actual voltage may not be accurate. Value set will be rounded to the nearest 13mV
-    level := (((200 #> level <# 600) - 200) / 13)
-    writereg(core.PRECHGLEVEL, 1, @level)
+    level := ( ( (200 #> level <# 600) - 200) / 13)
+    command(core.PRECHGLEVEL, level)
 
 
 PUB reset()
 ' Reset the display controller
-    if (lookdown(_RES: 0..31))
+    if (lookdown(_RES: 0..31) )
         outa[_RES] := 1
         dira[_RES] := 1
         outa[_RES] := 0
@@ -738,8 +738,8 @@ PUB rotation(state)
 ' Rotate display
 '   Valid values: TRUE (non-zero values), FALSE (0)
 '   Any other value returns the current setting
-    _rmapcolor := ( (_rmapcolor & core.ADDRINC_MASK) | ((state <> 0) & 1) )
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    _rmapcolor := ( (_rmapcolor & core.ADDRINC_MASK) | ( (state <> 0) & 1) )
+    command(core.SETREMAP, _rmapcolor)
 
 
 #ifdef GFX_DIRECT
@@ -752,7 +752,7 @@ PUB set_seg_current_scale_factor(s)
 ' Set segment current scaling factor, in 16ths
 '   s: 1..16 (clamped to range; default is 16)
     s := (1 #> s <# 16)-1
-    writereg(core.MASTCNTRST_CURR_CTRL, 1, @s)
+    command(core.MASTCNTRST_CURR_CTRL, s)
 
 
 PUB show()
@@ -773,9 +773,9 @@ PUB subpix_order(order)
 '   Valid values:
 '      *RGB (0): Red-Green-Blue order
 '       BGR (1): Blue-Green-Red order
-    order := ((RGB #> order <# BGR) << core.SUBPIX_ORDER)
-    _rmapcolor := ((_rmapcolor & core.SUBPIX_ORDER_MASK) | order)
-    writereg(core.SETREMAP, 1, @_rmapcolor)
+    order := ( (RGB #> order <# BGR) << core.SUBPIX_ORDER)
+    _rmapcolor := ( (_rmapcolor & core.SUBPIX_ORDER_MASK) | order)
+    command(core.SETREMAP, _rmapcolor)
 
 
 PUB visibility(mode)
@@ -787,8 +787,8 @@ PUB visibility(mode)
 '       INVERTED (3): Like NORMAL, but with inverted colors
 '   NOTE: This setting doesn't affect the contents of graphics RAM,
 '       only how they are displayed
-    mode := ((ALL_OFF #> mode <# INVERTED) + core.DISPALLOFF)
-    writereg(mode, 0, 0)
+    mode := ( (ALL_OFF #> mode <# INVERTED) + core.DISPALLOFF)
+    command(mode)
 
 
 #ifndef GFX_DIRECT
@@ -797,27 +797,29 @@ PRI memfill(xs, ys, val, count)
 '   xs, ys: Start of region
 '   val: Color
 '   count: Number of consecutive memory locations to write
-    wordfill(_ptr_drawbuffer + ((xs << 1) + (ys * _bytesperln)), ((val >> 8) & $FF) | ((val << 8) & $FF00), count)
+    wordfill(   _ptr_drawbuffer + ( (xs << 1) + (ys * _bytesperln) ), ...
+                ( (val >> 8) & $FF) | ( (val << 8) & $FF00), ...
+                count )
 #endif
 
 
-PRI writereg(reg_nr, nr_bytes, ptr_buff) | tmp
-' Write nr_bytes to device from ptr_buff
-    case reg_nr
-        $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9, $D1, $E3:
+PRI command(c, val=0, len=1)
+' Issue command with optional parameters
+    case c
+        $9E, $9F, $A4..$A7, $AD..$AF, $B0, $B9:
         ' Single-byte command
             outa[_DC] := core.CMD
             outa[_CS] := 0
-            spi.wr_byte(reg_nr)
+            spi.wr_byte(c)
             outa[_CS] := 1
             return
-        $15, $5C, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, $C7, $CA, $FD:
+        $15, $75, $96, $A0..$A2, $AB, $B1..$B6, $B8, $BB, $BE, $C1, $C7, $CA, $FD:
         ' Multi-byte command
             outa[_DC] := core.CMD
             outa[_CS] := 0
-            spi.wr_byte(reg_nr)
+            spi.wr_byte(c)
             outa[_DC] := core.DATA
-            spi.wrblock_lsbf(ptr_buff, nr_bytes)
+            spi.wrblock_lsbf(@val, len)
             outa[_CS] := 1
             return
         other:
