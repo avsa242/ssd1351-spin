@@ -671,8 +671,8 @@ PUB plot(x, y, color) | cmd_pkt[3]
     cmd_pkt.byte[4] := y                        ' D/C H
     cmd_pkt.byte[5] := y
     cmd_pkt.byte[6] := core.WRITERAM            ' D/C L
-    cmd_pkt.byte[7] := color.byte[1]            ' D/C H
-    cmd_pkt.byte[8] := color.byte[0]
+    cmd_pkt.byte[7] := color.byte[1]            ' D/C H     RRRRRGGG
+    cmd_pkt.byte[8] := color.byte[0]            '           GGGBBBBB
     outa[_DC] := core.CMD
     outa[_CS] := 0
     spi.wr_byte(cmd_pkt.byte[0])
