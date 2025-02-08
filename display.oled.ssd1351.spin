@@ -114,7 +114,7 @@ PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, p_disp=0)
 '   DC_PIN:             Data/Command (may be labeled 'RS'), 0..31
 '   RES_PIN:            Reset (set to -1 if not used), 0..31
 '   DISP_WID, DISP_HT:  display dimensions, in pixels
-'   p_fb:               (optional) pointer to display buffer (leave blank or set to 0 to use
+'   p_disp:             (optional) pointer to display buffer (leave blank or set to 0 to use
 '                           the driver's internal framebuffer)
     if ( lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) and lookdown(MOSI_PIN: 0..31) and ...
         lookdown(SCK_PIN: 0..31) )
