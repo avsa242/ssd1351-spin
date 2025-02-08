@@ -4,7 +4,7 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Feb 6, 2025
+    Updated:        Feb 8, 2025
     Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -31,8 +31,16 @@ CON
     RST             = 4
 
 
-    MAX_COLOR       = 65535
-    BYTESPERPX      = 2
+    BPP             = 16                        ' bits per pixel/color depth of the display
+    BYTESPERPX      = 1 #> (BPP/8)              ' limit to minimum of 1
+    BPPDIV          = 1 #> (8 / BPP)            ' limit to minimum of 1
+    BUFF_SZ         = (WIDTH * HEIGHT) / BPPDIV
+    MAX_COLOR       = (1 << BPP)-1
+    XMAX            = WIDTH-1
+    YMAX            = HEIGHT-1
+    CENTERX         = WIDTH/2
+    CENTERY         = HEIGHT/2
+
 
 ' Display power on/off modes
     OFF             = 0
@@ -76,7 +84,7 @@ VAR
     long _CS, _DC, _RES
 
 #ifndef GFX_DIRECT
-    word _framebuffer[(WIDTH*HEIGHT)]
+    word _framebuffer[BUFF_SZ]
 #endif
 
     byte _offs_x, _offs_y
@@ -98,11 +106,19 @@ PUB start(): status
 #endif
 
 
-PUB startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, ptr_dispbuff): status
-' Start driver using custom I/O settings
-    if ( lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) and lookdown(DIN_PIN: 0..31) and ...
-        lookdown(CLK_PIN: 0..31) )
-        if ( status := spi.init(CLK_PIN, DIN_PIN, -1, core.SPI_MODE) )
+PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, p_disp=0): status
+' Start the driver using custom I/O settings and (optionally) external framebuffer
+'   CS_PIN:             Chip Select, 0..31
+'   SCK_PIN:            Serial Clock, 0..31 (may be labeled 'CLK')
+'   MOSI_PIN:           Master-Out/Slave-In, 0..31 (may be labeled 'DIN')
+'   DC_PIN:             Data/Command (may be labeled 'RS'), 0..31
+'   RES_PIN:            Reset (set to -1 if not used), 0..31
+'   DISP_WID, DISP_HT:  display dimensions, in pixels
+'   p_fb:               (optional) pointer to display buffer (leave blank or set to 0 to use
+'                           the driver's internal framebuffer)
+    if ( lookdown(CS_PIN: 0..31) and lookdown(DC_PIN: 0..31) and lookdown(MOSI_PIN: 0..31) and ...
+        lookdown(SCK_PIN: 0..31) )
+        if ( status := spi.init(SCK_PIN, MOSI_PIN, -1, core.SPI_MODE) )
             _DC := DC_PIN
             _RES := RES_PIN
             _CS := CS_PIN
@@ -111,7 +127,7 @@ PUB startx(CS_PIN, CLK_PIN, DIN_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, ptr_dispbu
             outa[_DC] := 1
             dira[_DC] := 1
             set_dims(DISP_W, DISP_H)
-            set_address(ptr_dispbuff)
+            set_address(p_disp)
             reset()
             time.usleep(core.T_POR)
             disp_lock(ALL_UNLOCK)
