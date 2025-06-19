@@ -4,7 +4,7 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Feb 8, 2025
+    Updated:        Jun 19, 2025
     Copyright (c) 2025 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -346,10 +346,8 @@ PUB bitmap(ptr_bmap, xs, ys, bm_wid, bm_lns) | offs, nr_pix
 
     ' calc total number of pixels to write, based on dims and color depth
     ' clamp to a minimum of 1 to avoid odd behavior
-    nr_pix := 1 #> ( (xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX)
-
     pinw(_DC, core.DATA)
-    spi.wrblock_lsbf(ptr_bmap, nr_pix)
+    spi.wrblock_lsbf(ptr_bmap, 1 #> ( (xs + bm_wid-1) * (ys + bm_lns-1) * BYTESPERPX) )
     pinh(_CS)
 #endif
 
@@ -461,8 +459,8 @@ PUB color_depth(format)
 '      *COLOR_65K (0): 16-bit/65536 color format 1
 '       COLOR_262K (1): 18-bits/262144 color format
 '       COLOR_262K65K2 (2): 18-bit/262144 color format, 16-bit/65536 color format 2
-    format := ( (COLOR_65K #> format <# COLOR_262K65K2) << core.COLORFMT)
-    _rmapcolor := ( (_rmapcolor & core.COLORFMT_MASK) | format)
+    _rmapcolor := ( (_rmapcolor & core.COLORFMT_MASK) | ...
+                    ( (COLOR_65K #> format <# COLOR_262K65K2) << core.COLORFMT) )
     command(core.SETREMAP, _rmapcolor)
 
 
@@ -471,8 +469,7 @@ PUB comh_voltage(level)
 '   Valid values: 720..860 (clamped to range; POR: 820)
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
 '       so actual voltage may not be accurate. Value set will be rounded to the nearest 20mV
-    level := ( ( (720 #> level <# 860) - 720) / 20)
-    command(core.VCOMH, level)
+    command(core.VCOMH, ( ( (720 #> level <# 860) - 720) / 20) )
 
 
 PUB contrast(level)
@@ -541,8 +538,7 @@ PUB disp_lines(lines)
 ' Set total number of display lines
 '   Valid values: 16..128 (clamped to range; POR: 128)
 '   Any other value is ignored
-    lines := ( (16 #> lines <# 128) - 1)
-    command(core.SETMUXRATIO, lines)
+    command(core.SETMUXRATIO, ( (16 #> lines <# 128) - 1) )
 
 
 PUB invert_colors(state)
@@ -554,15 +550,13 @@ PUB invert_colors(state)
 PUB disp_offset(x, y)
 ' Set display offset
     _offs_x := (0 #> x <# 127)
-    y := (0 #> y <# 127)
-    command(core.DISPOFFSET, y)                 ' SSD1351 built-in
+    command(core.DISPOFFSET, (0 #> y <# 127) )  ' SSD1351 built-in
 
 
 PUB disp_start_line(sline)
 ' Set display start line
 '   Valid values: 0..127 (clamped to range; POR: 0)
-    sline := (0 #> sline <# 127)
-    command(core.STARTLINE, sline)
+    command(core.STARTLINE, (0 #> sline <# 127) )
 
 
 PUB interlace_ena(state)
@@ -570,8 +564,8 @@ PUB interlace_ena(state)
 ' Lines 0..31 will appear on even rows (starting on row 0)
 ' Lines 32..63 will appear on odd rows (starting on row 1)
 '   Valid values: TRUE (non-zero), *FALSE (0)
-    state := ( ( ( (state <> 0) & 1) ^ 1) << core.COMSPLIT)
-    _rmapcolor := ( (_rmapcolor & core.COMSPLIT_MASK) | state)
+    _rmapcolor := ( (_rmapcolor & core.COMSPLIT_MASK) | ...
+                    ( ( ( (state <> 0) & 1) ^ 1) << core.COMSPLIT) )
     command(core.SETREMAP, _rmapcolor)
 
 
@@ -627,7 +621,7 @@ PUB disp_lock(mode)
 ' Lock the display controller from executing commands
 '   Valid values:
 '      *ALL_UNLOCK ($12): Normal operation - OLED display accepts commands
-'       LOCK ($16): Locked - OLED will not process any commands, except LockDisplay(ALL_UNLOCK)
+'       LOCK ($16): Locked - OLED will not process any commands, except disp_lock(ALL_UNLOCK)
 '      *CFG_LOCK ($B0): Configuration registers locked
 '       CFG_UNLOCK ($B1): Configuration registers unlocked
     case mode
@@ -654,15 +648,13 @@ PUB mirror_v(state)
 PUB phase1_period(clks)
 ' Set discharge/phase 1 period, in display clocks
 '   Valid values: 5, 7, 9, 11, 13, 15, 17, 19, 21, 23, 25, 27, 29, 31 (clamped to range; POR: 5)
-    clks := ( ( ( (5 #> clks <# 31) - 1) / 2) - 1)
-    clks := ( (_phs1_2 & core.PHASE1_MASK) | clks)
+    _phs1_2 := ( (_phs1_2 & core.PHASE1_MASK) | ( ( ( (5 #> clks <# 31) - 1) / 2) - 1) )
     command(core.PRECHG, _phs1_2)
 
 
 PUB phase2_period(clks)
 ' Set charge/phase 2 period, in display clocks
 '   Valid values: 3..15 (clamped to range; POR: 8)
-    clks := ( (3 #> clks <# 15) << core.PHASE2)
     _phs1_2 := ( (_phs1_2 & core.PHASE2_MASK) | ( ( 3 #> clks <# 15) << core.PHASE2) )
     command(core.PRECHG, _phs1_2)
 
@@ -670,8 +662,7 @@ PUB phase2_period(clks)
 PUB phase3_period(clks)
 ' Set second charge/phase 3 period, in display clocks
 '   Valid values: 1..15 (clamped to range; POR: 8)
-    clks := (1 #> clks <# 15)
-    command(core.SETSECPRECHG, clks)
+    command(core.SETSECPRECHG, (1 #> clks <# 15) )
 
 
 PUB plot(x, y, color) | cmd_pkt[3]
@@ -714,9 +705,7 @@ PUB plot(x, y, color) | cmd_pkt[3]
 #ifndef GFX_DIRECT
 PUB point(x, y): pix_clr
 ' Get color of pixel at x, y
-    x := (0 #> x <# _disp_xmax)
-    y := (0 #> y <# _disp_ymax)
-    return word[_ptr_drawbuffer][x + (y * _disp_width)]
+    return word[_ptr_drawbuffer][(0 #> x <# _disp_xmax) + ( (0 #> y <# _disp_ymax) * _disp_width)]
 #endif
 
 
@@ -725,8 +714,7 @@ PUB powered(state)
 '   Valid values:
 '       OFF/FALSE (0): Turn off display power
 '       ON/TRUE (non-zero): Turn on display power
-    state := ( ( (state <> 0) & 1) + core.DISPOFF)
-    command(state)
+    command( ( ( (state <> 0) & 1) + core.DISPOFF) )
 
 
 PUB prechg_level(level)
@@ -734,8 +722,7 @@ PUB prechg_level(level)
 '   Valid values: 200..600 (default: 497)
 '   NOTE: Range is interpolated, based on the datasheet min/max values and number of steps,
 '       so actual voltage may not be accurate. Value set will be rounded to the nearest 13mV
-    level := ( ( (200 #> level <# 600) - 200) / 13)
-    command(core.PRECHGLEVEL, level)
+    command(core.PRECHGLEVEL, ( ( (200 #> level <# 600) - 200) / 13) )
 
 
 PUB reset()
@@ -766,8 +753,7 @@ PUB scroll_up_fs(px)
 PUB set_seg_current_scale_factor(s)
 ' Set segment current scaling factor, in 16ths
 '   s: 1..16 (clamped to range; default is 16)
-    s := (1 #> s <# 16)-1
-    command(core.MASTCNTRST_CURR_CTRL, s)
+    command(core.MASTCNTRST_CURR_CTRL, (1 #> s <# 16)-1 )
 
 
 PUB show()
@@ -788,8 +774,8 @@ PUB subpix_order(order)
 '   Valid values:
 '      *RGB (0): Red-Green-Blue order
 '       BGR (1): Blue-Green-Red order
-    order := ( (RGB #> order <# BGR) << core.SUBPIX_ORDER)
-    _rmapcolor := ( (_rmapcolor & core.SUBPIX_ORDER_MASK) | order)
+    _rmapcolor := ( (_rmapcolor & core.SUBPIX_ORDER_MASK) | ...
+                    ( (RGB #> order <# BGR) << core.SUBPIX_ORDER) )
     command(core.SETREMAP, _rmapcolor)
 
 
@@ -802,8 +788,7 @@ PUB visibility(mode)
 '       INVERTED (3): Like NORMAL, but with inverted colors
 '   NOTE: This setting doesn't affect the contents of graphics RAM,
 '       only how they are displayed
-    mode := ( (ALL_OFF #> mode <# INVERTED) + core.DISPALLOFF)
-    command(mode)
+    command( ( (ALL_OFF #> mode <# INVERTED) + core.DISPALLOFF) )
 
 
 #ifndef GFX_DIRECT
