@@ -571,7 +571,7 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
         outa[_DC] := core.CMD
         spi.wr_byte(core.WRITERAM)
         outa[_DC] := core.DATA
-        spi.wrwordx_msbf(c, (||(y2-y1) )+1)
+        spi.wrwordx_msbf(c, (abs(y2-y1) )+1)
         outa[_CS] := 1
         return
     if (y1 == y2)
@@ -580,12 +580,12 @@ PUB line(x1, y1, x2, y2, c) | sx, sy, ddx, ddy, err, e2
         outa[_DC] := core.CMD
         spi.wr_byte(core.WRITERAM)
         outa[_DC] := core.DATA
-        spi.wrwordx_msbf(c, (||(x2-x1) )+1)
+        spi.wrwordx_msbf(c, (abs(x2-x1) )+1)
         outa[_CS] := 1
         return
 
-    ddx := ||(x2-x1)
-    ddy := ||(y2-y1)
+    ddx := abs(x2-x1)
+    ddy := abs(y2-y1)
     err := (ddx - ddy)
 
     sx := -1
