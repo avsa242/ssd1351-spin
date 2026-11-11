@@ -4,11 +4,12 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Jun 19, 2025
-    Copyright (c) 2025 - See end of file for terms of use.
+    Updated:        Nov 11, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
 
+#define HAS_SET_ROTATION
 #define MEMMV_NATIVE wordmove
 #include "graphics.common.spin2h"
 
@@ -185,9 +186,7 @@ PUB preset_adafruit_1431_port_up()
 ' Preset: Adafruit #1431 (128x128)
 '   Oriented portrait-up (soldered pins are at the top, display ribbon at the bottom)
     preset_adafruit_1431()
-    rotation(false)
-    mirror_h(false)
-    mirror_v(true)
+    set_rotation(0)
 
 
 PUB preset_newhaven_nhd_1p5_port_down = preset_adafruit_1431_port_down
@@ -195,9 +194,7 @@ PUB preset_adafruit_1431_port_down()
 ' Preset: Adafruit #1431 (128x128)
 '   Oriented portrait-down (soldered pins are at the top, display ribbon at the bottom)
     preset_adafruit_1431()
-    rotation(false)
-    mirror_h(true)
-    mirror_v(false)
+    set_rotation(180)
 
 
 PUB preset_newhaven_nhd_1p5_land_left = preset_adafruit_1431_land_left
@@ -205,9 +202,7 @@ PUB preset_adafruit_1431_land_left()
 ' Preset: Adafruit #1431 (128x128)
 '   Oriented landscape-left (soldered pins are at the left, display ribbon at the right)
     preset_adafruit_1431()
-    rotation(true)
-    mirror_h(true)
-    mirror_v(true)
+    set_rotation(90)
 
 
 PUB preset_newhaven_nhd_1p5_land_right = preset_adafruit_1431_land_right
@@ -215,9 +210,7 @@ PUB preset_adafruit_1431_land_right()
 ' Preset: Adafruit #1431 (128x128)
 '   Oriented landscape-right (soldered pins are at the right, display ribbon at the left)
     preset_adafruit_1431()
-    rotation(true)
-    mirror_h(false)
-    mirror_v(false)
+    set_rotation(270)
 
 
 PUB preset_clickc_away()
@@ -655,7 +648,7 @@ PUB phase1_period(clks)
 PUB phase2_period(clks)
 ' Set charge/phase 2 period, in display clocks
 '   Valid values: 3..15 (clamped to range; POR: 8)
-    _phs1_2 := ( (_phs1_2 & core.PHASE2_MASK) | ( ( 3 #> clks <# 15) << core.PHASE2) )
+    _phs1_2 := ( (_phs1_2 & core.PHASE2_MASK) | ( (3 #> clks <# 15) << core.PHASE2) )
     command(core.PRECHG, _phs1_2)
 
 
@@ -736,18 +729,60 @@ PUB reset()
         pinh(_RES)
 
 
-PUB rotation(state)
-' Rotate display
-'   Valid values: TRUE (non-zero values), FALSE (0)
-'   Any other value returns the current setting
-    _rmapcolor := ( (_rmapcolor & core.ADDRINC_MASK) | ( (state <> 0) & 1) )
-    command(core.SETREMAP, _rmapcolor)
 
 
 #ifdef GFX_DIRECT
 PUB scroll_up_fs(px)
 ' dummy method
 #endif
+
+
+pub set_rotation(r) | w, h
+' Set display orientation (hardware-native)
+'   r:  orientation from hardware default (degrees)
+'       0:      no change from panel/hardware default
+'       90:     rotate 90deg CW
+'       180:    rotate 180deg
+'       270:    rotate 270deg
+    case r
+        0:
+            w := WIDTH                          ' orientation: default panel orientation
+            h := HEIGHT
+            _rotation := 0                      ' = 0deg
+            r := 0                              ' ili9341 rotate (MV): no (portrait)
+            mirror_h(false)
+            mirror_v(true)
+        90:
+            w := HEIGHT                         ' orientation: width/height swapped
+            h := WIDTH
+            _rotation := 1                      ' = 90deg
+            r := 1                              ' ili9341 rotate (MV): yes (landscape)
+            mirror_h(true)
+            mirror_v(true)
+        180:
+            w := WIDTH
+            h := HEIGHT
+            _rotation := 2                      ' = 180deg
+            r := 0
+            mirror_h(true)
+            mirror_v(false)
+        270:
+            w := HEIGHT
+            h := WIDTH
+            _rotation := 3                      ' = 270deg
+            r := 1
+            mirror_h(false)
+            mirror_v(false)
+        other:
+            return
+
+    set_dims(w, h)                              ' set/update drawable screen dimensions
+    font_sz()                                   ' re-compute text cursor limits
+
+    r := ( (r <> 0) & 1)
+
+    _rmapcolor := (_rmapcolor & core.ADDRINC_MASK) | r
+    command(core.SETREMAP, _rmapcolor)
 
 
 PUB set_seg_current_scale_factor(s)
@@ -828,7 +863,7 @@ PRI command(c, val=0, len=1)
 
 DAT
 {
-Copyright 2025 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,
