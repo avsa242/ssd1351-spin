@@ -5,10 +5,12 @@
         * minimal code example
     Author:         Jesse Burt
     Started:        Jan 3, 2024
-    Updated:        Sep 2, 2024
-    Copyright (c) 2024 - See end of file for terms of use.
+    Updated:        Nov 12, 2026
+    Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
+'#define GFX_DIRECT
+'#pragma exportdef(GFX_DIRECT)
 
 CON
 
@@ -18,7 +20,7 @@ CON
 OBJ
 
     fnt:    "font.5x8"
-    disp:   "display.oled.ssd1351" | WIDTH=96, HEIGHT=96, CS=0, SCK=1, MOSI=2, DC=3, RST=4
+    disp:   "display.oled.ssd1351" | WIDTH=96, HEIGHT=64, CS=8, SCK=9, MOSI=10, DC=11, RST=12
 
 
 PUB main()
@@ -35,23 +37,23 @@ PUB main()
     { the following presets can only operate in unbuffered mode (draw directly to the display)
         on the P1, due to memory constraints; uncomment the #define and #pragma lines before
         building }
-'#define GFX_DIRECT
-'#pragma exportdef(GFX_DIRECT)
-'    disp.preset_128x128()                      ' 128x128 panels
-'    disp.preset_128x()                         ' 128x other vertical resolutions
-'    disp.preset_128xhiperf()                   '   same, but max display clock
+'    disp.preset_128x128()                       ' 128x128 panels
+'    disp.preset_128x()                          ' 128x other vertical resolutions
+'    disp.preset_128xhiperf()                    '   same, but max display clock
+    disp.preset_adafruit_1431()                 ' Adafruit #1431, Newhaven 1.5 (128x128)
 
     { the following presets can operate either buffered or unbuffered on the P1 }
-    disp.preset_clickc_towards()               ' MikroE OLED #1585 96x96, glass panel towards user
+'    disp.preset_clickc_towards()               ' MikroE OLED #1585 96x96, glass panel towards user
 '    disp.preset_clickc_away()                  '   same, but glass panel away from user
 
+    disp.set_rotation(0)
     disp.set_font(fnt.ptr(), fnt.setup())
     disp.clear()
 
     { draw some text }
     disp.pos_xy(0, 0)
     disp.fgcolor($ffff)
-    disp.strln(@"Testing 12345")
+    disp.puts(@"Testing 12345")
     disp.show()                               ' send the buffer to the display
 
     { draw one pixel at the center of the screen }
@@ -69,7 +71,7 @@ PUB main()
 
 DAT
 {
-Copyright 2024 Jesse Burt
+Copyright 2026 Jesse Burt
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of this software and
 associated documentation files (the "Software"), to deal in the Software without restriction,

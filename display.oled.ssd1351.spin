@@ -4,7 +4,7 @@
     Description:    Driver for Solomon Systech SSD1351 RGB OLED displays
     Author:         Jesse Burt
     Started:        Mar 11, 2020
-    Updated:        Nov 11, 2026
+    Updated:        Nov 12, 2026
     Copyright (c) 2026 - See end of file for terms of use.
 ----------------------------------------------------------------------------------------------------
 }
@@ -17,8 +17,8 @@ CON
 
     { default I/O settings; these can be overridden in the parent object }
     { display dimensions }
-    WIDTH           = 96
-    HEIGHT          = 64
+    WIDTH           = 128
+    HEIGHT          = 128
     XMAX            = WIDTH-1
     YMAX            = HEIGHT-1
     CENTERX         = WIDTH/2
@@ -88,6 +88,7 @@ VAR
     word _framebuffer[BUFF_SZ]
 #endif
 
+    byte _xcmd, _ycmd                           ' axis <-> set address command mapping
     byte _offs_x, _offs_y
 
     ' shadow registers
@@ -130,6 +131,8 @@ PUB startx(CS_PIN, SCK_PIN, MOSI_PIN, DC_PIN, RES_PIN, DISP_W, DISP_H, p_disp=0)
             set_dims(DISP_W, DISP_H)
             set_address(p_disp)
             reset()
+            _xcmd := core.SETCOLUMN
+            _ycmd := core.SETROW
             time.usleep(core.T_POR)
             disp_lock(ALL_UNLOCK)
             disp_lock(CFG_UNLOCK)
@@ -165,7 +168,9 @@ PUB defaults()
 
 PUB preset_newhaven_nhd_1p5 = preset_adafruit_1431
 PUB preset_adafruit_1431()
-' Preset: Adafruit #1431 (128x128)
+' Preset:
+'   Adafruit #1431 (128x128)
+'   Newhaven Displays NHD-1.5-128128ASC3
     draw_area(0, 0, 127, 127)
     subpix_order(RGB)
     interlace_ena(FALSE)
@@ -183,7 +188,9 @@ PUB preset_adafruit_1431()
 
 PUB preset_newhaven_nhd_1p5_port_up = preset_adafruit_1431_port_up
 PUB preset_adafruit_1431_port_up()
-' Preset: Adafruit #1431 (128x128)
+' Preset:
+'   Adafruit #1431 (128x128)
+'   Newhaven Displays NHD-1.5-128128ASC3
 '   Oriented portrait-up (soldered pins are at the top, display ribbon at the bottom)
     preset_adafruit_1431()
     set_rotation(0)
@@ -191,7 +198,9 @@ PUB preset_adafruit_1431_port_up()
 
 PUB preset_newhaven_nhd_1p5_port_down = preset_adafruit_1431_port_down
 PUB preset_adafruit_1431_port_down()
-' Preset: Adafruit #1431 (128x128)
+' Preset:
+'   Adafruit #1431 (128x128)
+'   Newhaven Displays NHD-1.5-128128ASC3
 '   Oriented portrait-down (soldered pins are at the top, display ribbon at the bottom)
     preset_adafruit_1431()
     set_rotation(180)
@@ -199,7 +208,9 @@ PUB preset_adafruit_1431_port_down()
 
 PUB preset_newhaven_nhd_1p5_land_left = preset_adafruit_1431_land_left
 PUB preset_adafruit_1431_land_left()
-' Preset: Adafruit #1431 (128x128)
+' Preset:
+'   Adafruit #1431 (128x128)
+'   Newhaven Displays NHD-1.5-128128ASC3
 '   Oriented landscape-left (soldered pins are at the left, display ribbon at the right)
     preset_adafruit_1431()
     set_rotation(90)
@@ -207,7 +218,9 @@ PUB preset_adafruit_1431_land_left()
 
 PUB preset_newhaven_nhd_1p5_land_right = preset_adafruit_1431_land_right
 PUB preset_adafruit_1431_land_right()
-' Preset: Adafruit #1431 (128x128)
+' Preset:
+'   Adafruit #1431 (128x128)
+'   Newhaven Displays NHD-1.5-128128ASC3
 '   Oriented landscape-right (soldered pins are at the right, display ribbon at the left)
     preset_adafruit_1431()
     set_rotation(270)
@@ -355,10 +368,10 @@ PUB box(x1, y1, x2, y2, c, fill) | cmd_pkt[2]
     if ( (x2 < x1) or (y2 < y1) )
         return
     if (fill)
-        cmd_pkt.byte[0] := core.SETCOLUMN       ' D/C L
+        cmd_pkt.byte[0] := _xcmd                ' D/C L
         cmd_pkt.byte[1] := x1+_offs_x           ' D/C H
         cmd_pkt.byte[2] := x2+_offs_x
-        cmd_pkt.byte[3] := core.SETROW          ' D/C L
+        cmd_pkt.byte[3] := _ycmd                ' D/C L
         cmd_pkt.byte[4] := y1                   ' D/C H
         cmd_pkt.byte[5] := y2
 
@@ -523,8 +536,8 @@ PUB draw_area(sx, sy, ex, ey) | tmpx, tmpy
         tmpy.byte[2] := tmpy.byte[0]
         tmpy.byte[0] := tmpy.byte[1]
         tmpy.byte[1] := tmpy.byte[2]
-    command(core.SETCOLUMN, tmpx, 2)
-    command(core.SETROW, tmpy, 2)
+    command(_xcmd, tmpx, 2)
+    command(_ycmd, tmpy, 2)
 
 
 PUB disp_lines(lines)
@@ -664,10 +677,10 @@ PUB plot(x, y, color) | cmd_pkt[3]
         return                                  ' coords out of bounds, ignore
 #ifdef GFX_DIRECT
 ' direct to display
-    cmd_pkt.byte[0] := core.SETCOLUMN           ' D/C L
+    cmd_pkt.byte[0] := _xcmd                    ' D/C L
     cmd_pkt.byte[1] := x+_offs_x                ' D/C H
     cmd_pkt.byte[2] := x+_offs_x
-    cmd_pkt.byte[3] := core.SETROW              ' D/C L
+    cmd_pkt.byte[3] := _ycmd                    ' D/C L
     cmd_pkt.byte[4] := y                        ' D/C H
     cmd_pkt.byte[5] := y
     cmd_pkt.byte[6] := core.WRITERAM            ' D/C L
@@ -736,7 +749,7 @@ PUB scroll_up_fs(px)
 #endif
 
 
-pub set_rotation(r) | w, h
+pub set_rotation(r) | w, h, sr, cr
 ' Set display orientation (hardware-native)
 '   r:  orientation from hardware default (degrees)
 '       0:      no change from panel/hardware default
@@ -748,40 +761,46 @@ pub set_rotation(r) | w, h
             w := WIDTH                          ' orientation: default panel orientation
             h := HEIGHT
             _rotation := 0                      ' = 0deg
-            r := 0                              ' ili9341 rotate (MV): no (portrait)
-            mirror_h(false)
-            mirror_v(true)
+            r := 0                              ' addressing mode: horizontal
+            sr := 0 << 1                        ' segment remap: no
+            cr := 1 << 4                        ' common remap: yes
+            _xcmd := core.SETCOLUMN             ' x-coord address command: Set Column
+            _ycmd := core.SETROW                ' y-coord address command: Set Row
         90:
             w := HEIGHT                         ' orientation: width/height swapped
             h := WIDTH
             _rotation := 1                      ' = 90deg
-            r := 1                              ' ili9341 rotate (MV): yes (landscape)
-            mirror_h(true)
-            mirror_v(true)
+            r := 1                              ' addressing mode: vertical
+            sr := 1 << 1
+            cr := 1 << 4
+            _xcmd := core.SETROW                ' x-coord address command: Set Row
+            _ycmd := core.SETCOLUMN             ' y-coord address command: Set Column
         180:
             w := WIDTH
             h := HEIGHT
             _rotation := 2                      ' = 180deg
             r := 0
-            mirror_h(true)
-            mirror_v(false)
+            sr := 1 << 1
+            cr := 0 << 4
+            _xcmd := core.SETCOLUMN
+            _ycmd := core.SETROW
         270:
             w := HEIGHT
             h := WIDTH
             _rotation := 3                      ' = 270deg
             r := 1
-            mirror_h(false)
-            mirror_v(false)
+            sr := 0 << 1
+            cr := 0 << 4
+            _xcmd := core.SETROW
+            _ycmd := core.SETCOLUMN
         other:
             return
 
     set_dims(w, h)                              ' set/update drawable screen dimensions
     font_sz()                                   ' re-compute text cursor limits
 
-    r := ( (r <> 0) & 1)
-
-    _rmapcolor := (_rmapcolor & core.ADDRINC_MASK) | r
-    command(core.SETREMAP, _rmapcolor)
+    _rmapcolor := (_rmapcolor & core.ADDRINC_MASK) | (cr | sr | r)
+    command(core.SETREMAP, _rmapcolor, 1)
 
 
 PUB set_seg_current_scale_factor(s)
